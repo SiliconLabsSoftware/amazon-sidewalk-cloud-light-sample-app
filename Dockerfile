@@ -49,4 +49,5 @@ RUN case ${TARGETARCH} in \
 
 WORKDIR /app
 COPY run.sh ./run.sh
+COPY frontend ./frontend
 CMD ["./run.sh"]

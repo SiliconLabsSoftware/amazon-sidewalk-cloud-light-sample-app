@@ -10,3 +10,7 @@ cat /etc/os-release
 uname -a
 
 aws s3 ls
+
+cd frontend
+npm install
+npm run build
