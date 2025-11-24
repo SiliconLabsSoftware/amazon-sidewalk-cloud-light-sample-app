@@ -1,0 +1,7 @@
+# mandatory to configure:
+export AWS_PROFILE="default"
+export AWS_REGION="us-east-1"
+
+# optional (will be generated if left empty):
+export TERRAFORM_BACKEND_BUCKET=""
+export FRONTEND_PASSWORD=""

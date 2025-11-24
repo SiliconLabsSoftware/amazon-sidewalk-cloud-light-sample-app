@@ -1,0 +1,10 @@
+services:
+  deployer:
+    image: cloud-light
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - $HOME/.aws/credentials:/root/.aws/credentials:ro
+      - ./:/cloud-light
+    command: ["deploy"]
