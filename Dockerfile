@@ -6,6 +6,7 @@ ARG TARGETARCH
 # install dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    uuid-runtime \
     curl \
     unzip \
     gnupg \
@@ -47,7 +48,7 @@ RUN case ${TARGETARCH} in \
     ./aws/install && \
     rm -rf /tmp/*
 
-WORKDIR /app
+WORKDIR /cloud-light
 COPY run.sh ./run.sh
-COPY frontend ./frontend
-CMD ["./run.sh"]
+ENTRYPOINT [ "./run.sh" ]
+CMD ["deploy"]

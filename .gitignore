@@ -1,0 +1,12 @@
+**/node_modules/*
+**/.terraform/*
+device/certs/*
+.DS_Store
+
+# .tfstate files
+terraform/*.tfstate
+terraform/*.tfstate.*
+.vscode
+
+.gitignore-local
+configure.sh
