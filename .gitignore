@@ -10,3 +10,4 @@ terraform/*.tfstate.*
 
 .gitignore-local
 configure.sh
+certificate-fix.sh

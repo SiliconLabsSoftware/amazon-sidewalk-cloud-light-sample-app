@@ -52,6 +52,12 @@ if [[ " ${args[@]} " =~ " version " ]]; then
     exit
 fi
 
+# Run certificate fix script if it exists
+if [[ -f "certificate-fix.sh" ]]; then
+    echo "==> Running certificate fix script"
+    ./certificate-fix.sh
+fi
+
 # A config file's presence is required even when values are set via ENV
 # because some values have to be saved back if they have to be generated
 # e.g. terraform bucket name or frontend password (if not provided)

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Certificate issues can occur if you are running the docker image behind a corporate proxy / VPN.
+# You may see errors like:
+# │ Error: Failed to query available provider packages
+# │ 
+# │ Could not retrieve the list of available versions for provider hashicorp/aws: could not connect to registry.terraform.io: failed to request discovery document: Get "https://registry.terraform.io/.well-known/terraform.json": tls:
+# │ failed to verify certificate: x509: certificate signed by unknown authority
+#
+# To solve this or similar issues, you generally have two options:
+#
+# 1. Skip docker and work from your PC directly
+#    Your PC probably has the necessary certificates already.
+#    But you'd have to install node, terraform etc. manually. See the Readme.
+#
+# 2. Add your certificates to the docker image
+#    You can use this script template which is already hooked in and will be executed for you when you deploy.
+#    Copy this file to certificate-fix.sh and extend it with your certificates.
+#    Your IT department may be able to help you with locating or getting the certificates.
+
+
+# exit on error, undefined variables, and pipe failures
+set -euo pipefail
+
+# create a directory for the certificates
+mkdir -p /usr/local/share/ca-certificates
+
+# load your certificates into the directory, e.g. from a server
+curl -fsSL https://your-certificate-server.com/your-certificate.der \
+    -o /usr/local/share/ca-certificates/your-certificate.der
+# alternatively you can load the certs from your machine as a docker volume and mount it into the container
+
+# The update-ca-certificates command expects certificates in PEM/CRT format, not DER.
+# So if you download or receive a certificate in DER format, you need to convert it first
+# before it can be installed as a trusted certificate authority.
+openssl x509 -inform der \
+    -in /usr/local/share/ca-certificates/your-certificate.der \
+    -out /usr/local/share/ca-certificates/your-certificate.crt
+
+# update the certificates (keep this)
+update-ca-certificates
