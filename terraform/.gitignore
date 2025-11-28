@@ -1,0 +1,3 @@
+.terraform
+.outputs.sh
+.terraform.lock.hcl

@@ -23,14 +23,15 @@ if [[ "$#" -eq 0 ]]; then
     echo ""
     echo "commands:"
     echo "  init          initialize terraform backend"
-    echo "  plan          plan before deployment"
     echo "  deploy        deploy both backend and frontend"
+    echo "  lambda-deps   install lambda dependencies"
+    echo "  lambda-build  build lambda functions (tf will also build)"
+    echo "  plan          terraform plan before deployment"
     echo "  tf            deploy (apply) terraformed backend infrastructure"
     echo "  outputs       export deployment outputs: URLs, IDs etc"
-    echo "  lambda-deps   install lambda dependencies"
-    echo "  lambda        deploy lambda functions"
     echo "  ui-deps       install frontend dependencies"
     echo "  ui            deploy web frontend"
+    echo "  destroy       destroy terraform infrastructure"
     echo "  version       print version and debug info"
     echo ""
     exit
@@ -169,7 +170,7 @@ export TF_VAR_product="cloud-light"
 # **********
 
 if [[ " ${args[@]} " =~ " deploy " ]]; then
-    args=("init" "tf" "outputs" "lambda-deps" "lambda" "ui-deps" "ui")
+    args=("init" "lambda-deps" "tf" "outputs" "ui-deps" "ui")
 fi
 
 if [[ " ${args[@]} " =~ " init " ]]; then
@@ -219,8 +220,13 @@ if [[ " ${args[@]} " =~ " plan " ]]; then
 fi
 
 if [[ " ${args[@]} " =~ " tf " ]]; then
-    echo "==> Applying Terraform infrastructure"
-    # TODO lambda
+    echo "==> Deploying Terraform infrastructure"
+    echo "Building lambda functions..."
+    pushd lambda >/dev/null
+    npm run build
+    popd >/dev/null
+    
+    echo "Applying Terraform infrastructure..."
     pushd terraform >/dev/null
     terraform apply -auto-approve
     popd >/dev/null
@@ -247,11 +253,10 @@ if [[ " ${args[@]} " =~ " lambda-deps " ]]; then
     popd >/dev/null
 fi
 
-if [[ " ${args[@]} " =~ " lambda " ]]; then
-    echo "==> Building and deploying lambda functions"
+if [[ " ${args[@]} " =~ " lambda-build " ]]; then
+    echo "==> Building lambda functions"
     pushd lambda >/dev/null
     npm run build
-    # TODO: deploy lambda functions
     popd >/dev/null
 fi
 
@@ -281,6 +286,13 @@ if [[ " ${args[@]} " =~ " ui " ]]; then
     echo "Invalidating CloudFront cache..."
     aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_ID" --paths "/*" >/dev/null
     echo "Deployment complete: https://$APP_PUBLIC_URL"
+    popd >/dev/null
+fi
+
+if [[ " ${args[@]} " =~ " destroy " ]]; then
+    echo "==> Destroying Terraform infrastructure"
+    pushd terraform >/dev/null
+    terraform destroy -auto-approve
     popd >/dev/null
 fi
 
