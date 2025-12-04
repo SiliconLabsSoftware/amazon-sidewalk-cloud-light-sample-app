@@ -214,7 +214,7 @@ fi
 
 if [[ " ${args[@]} " =~ " plan " ]]; then
     echo "==> Planning Terraform changes"
-    pushd terraform
+    pushd terraform >/dev/null
     terraform plan
     popd >/dev/null
 fi
@@ -236,12 +236,13 @@ if [[ " ${args[@]} " =~ " outputs " ]]; then
     echo "==> Extracting Terraform outputs"
     pushd terraform >/dev/null
     rm -f .outputs.sh
-    terraform output public_cloudfront_domain_name | tr '\n' ' ' | echo "export APP_PUBLIC_URL=$(cat -)" >>.outputs.sh
+    # terraform output public_cloudfront_domain_name | tr '\n' ' ' | echo "export APP_PUBLIC_URL=$(cat -)" >>.outputs.sh
     terraform output rest_url | tr '\n' ' ' | echo "export APP_REST_URL=$(cat -)" >>.outputs.sh
     terraform output wss_url | tr '\n' ' ' | echo "export APP_WSS_URL=$(cat -)" >>.outputs.sh
-    terraform output app_s3_bucket | tr '\n' ' ' | echo "export APP_S3_BUCKET=$(cat -)" >>.outputs.sh
-    terraform output public_cloudfront_id | tr '\n' ' ' | echo "export CLOUDFRONT_ID=$(cat -)" >>.outputs.sh
+    # terraform output app_s3_bucket | tr '\n' ' ' | echo "export APP_S3_BUCKET=$(cat -)" >>.outputs.sh
+    # terraform output public_cloudfront_id | tr '\n' ' ' | echo "export CLOUDFRONT_ID=$(cat -)" >>.outputs.sh
     terraform output iot_endpoint | tr '\n' ' ' | echo "export IOT_ENDPOINT=$(cat -)" >>.outputs.sh
+    echo ""
     cat .outputs.sh
     popd >/dev/null
 fi

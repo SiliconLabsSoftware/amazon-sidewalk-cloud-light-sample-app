@@ -1,3 +1,4 @@
+# Device uplink lambda:
 data "archive_file" "uplink_lambda" {
   type        = "zip"
   source_file = "${path.module}/../lambda/dist/uplink.mjs"
@@ -13,12 +14,12 @@ resource "aws_lambda_function" "uplink" {
   role             = aws_iam_role.lambda_exec.arn
   environment {
     variables = {
-      REGION                = var.aws_region
+      REGION = var.aws_region
     }
   }
   logging_config {
-    log_format            = "Text"
-    log_group             = aws_cloudwatch_log_group.lambda_uplink.name
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.lambda_uplink.name
   }
   depends_on = [aws_cloudwatch_log_group.lambda_uplink]
 }
@@ -31,6 +32,79 @@ resource "aws_lambda_permission" "iot_lambda_uplink" {
   source_arn    = aws_iot_topic_rule.rule.arn
 }
 
+# HTTP API Gateway handler lambda:
+data "archive_file" "http_lambda" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/dist/http.mjs"
+  output_path = "${path.module}/.terraform/http.zip"
+}
+
+resource "aws_lambda_function" "http" {
+  function_name    = "CloudLightHttp"
+  handler          = "http.handler"
+  runtime          = "nodejs24.x"
+  filename         = data.archive_file.http_lambda.output_path
+  source_code_hash = filebase64sha256("${data.archive_file.http_lambda.output_path}")
+  role             = aws_iam_role.lambda_exec.arn
+  environment {
+    variables = {
+      REGION = var.aws_region
+    }
+  }
+  logging_config {
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.lambda_http.name
+  }
+  depends_on = [aws_cloudwatch_log_group.lambda_http]
+
+}
+
+resource "aws_lambda_permission" "apigw_lambda_http" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  function_name = aws_lambda_function.http.function_name
+  source_arn    = "${aws_apigatewayv2_api.http.execution_arn}/${aws_apigatewayv2_stage.http.name}/*/*"
+  depends_on    = [aws_apigatewayv2_api.http]
+}
+
+# Websocket API Gateway handler lambda:
+data "archive_file" "websocket_lambda" {
+  type        = "zip"
+  source_file = "${path.module}/../lambda/dist/websocket.mjs"
+  output_path = "${path.module}/.terraform/websocket.zip"
+}
+
+resource "aws_lambda_function" "websocket" {
+  function_name    = "CloudLightWebsocket"
+  handler          = "websocket.handler"
+  runtime          = "nodejs24.x"
+  filename         = data.archive_file.websocket_lambda.output_path
+  source_code_hash = filebase64sha256("${data.archive_file.websocket_lambda.output_path}")
+  role             = aws_iam_role.lambda_exec.arn
+  environment {
+    variables = {
+      REGION = var.aws_region
+    }
+  }
+  logging_config {
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.lambda_websocket.name
+  }
+  depends_on = [aws_cloudwatch_log_group.lambda_websocket]
+
+}
+
+resource "aws_lambda_permission" "apigw_lambda_websocket" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  principal     = "apigateway.amazonaws.com"
+  function_name = aws_lambda_function.websocket.function_name
+  source_arn    = "${aws_apigatewayv2_api.websocket.execution_arn}/*/*"
+  depends_on    = [aws_apigatewayv2_deployment.websocket]
+}
+
+# Common permissions:
 resource "aws_iam_role" "lambda_exec" {
   name               = "CloudLightLambdaExec"
   assume_role_policy = <<EOF
@@ -69,18 +143,15 @@ resource "aws_iam_policy" "policy" {
             "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:*"
         },
         {
-          "Effect": "Allow",
-          "Action": "cloudwatch:PutMetricData",
-          "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:*"
-        },
-        {
             "Effect": "Allow",
             "Action": [
                 "logs:CreateLogStream",
                 "logs:PutLogEvents"
             ],
             "Resource": [
-                "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/CloudLightUplink:*"
+                "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/CloudLightUplink:*",
+                "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/CloudLightHttp:*",
+                "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/lambda/CloudLightWebsocket:*"
             ]
         },
         {
@@ -113,7 +184,7 @@ resource "aws_iam_policy" "policy" {
                 "dynamodb:Query",
                 "dynamodb:UpdateItem"
             ],
-            "Resource": "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/CloudLight"
+            "Resource": "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.dynamodb_table}"
         }
     ]
 }
@@ -127,4 +198,3 @@ resource "aws_iam_role_policy_attachment" "cloud_light_lambda" {
     aws_iam_policy.policy
   ]
 }
-
