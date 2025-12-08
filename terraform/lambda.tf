@@ -14,7 +14,9 @@ resource "aws_lambda_function" "uplink" {
   role             = aws_iam_role.lambda_exec.arn
   environment {
     variables = {
-      REGION = var.aws_region
+      REGION         = var.aws_region
+      DYNAMODB_TABLE = var.dynamodb_table
+      IOT_ENDPOINT   = "https://${data.aws_iot_endpoint.data_ats.endpoint_address}"
     }
   }
   logging_config {
@@ -24,12 +26,20 @@ resource "aws_lambda_function" "uplink" {
   depends_on = [aws_cloudwatch_log_group.lambda_uplink]
 }
 
-resource "aws_lambda_permission" "iot_lambda_uplink" {
-  statement_id  = "AllowExecutionFromAWSIoT"
+resource "aws_lambda_permission" "iot_lambda_uplink_wireless" {
+  statement_id  = "AllowExecutionFromAWSIoTWireless"
   action        = "lambda:InvokeFunction"
   principal     = "iot.amazonaws.com"
   function_name = aws_lambda_function.uplink.function_name
-  source_arn    = aws_iot_topic_rule.rule.arn
+  source_arn    = aws_iot_topic_rule.wireless.arn
+}
+
+resource "aws_lambda_permission" "iot_lambda_uplink_simulated" {
+  statement_id  = "AllowExecutionFromAWSIoTSimulated"
+  action        = "lambda:InvokeFunction"
+  principal     = "iot.amazonaws.com"
+  function_name = aws_lambda_function.uplink.function_name
+  source_arn    = aws_iot_topic_rule.simulated.arn
 }
 
 # HTTP API Gateway handler lambda:

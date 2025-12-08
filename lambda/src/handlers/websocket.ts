@@ -4,11 +4,7 @@ export const handler = async (
   event: APIGatewayProxyWebsocketEventV2,
   context: Context,
 ): Promise<APIGatewayProxyResultV2> => {
-  console.log(
-    "Websocket handler event: ",
-    JSON.stringify(event, null, 2),
-    JSON.stringify(context, null, 2),
-  );
+  console.log("Websocket event: ", JSON.stringify(event, null, 2));
   try {
     const region = process.env.REGION;
     if (!region) {

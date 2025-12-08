@@ -1,29 +1,24 @@
 {
-    "$schema": "https://www.schemastore.org/tsconfig",
-    "display": "Node 24",
-    "_version": "24.0.0",
-  
-    "compilerOptions": {
-      "lib": [
-        "es2024",
-        "ESNext.Array",
-        "ESNext.Collection",
-        "ESNext.Iterator",
-        "ESNext.Promise"
-      ],
-      "module": "nodenext",
-      "target": "es2024",
-  
-      "preserveConstEnums": true,
-      "noEmit": true,
-      "sourceMap": false,
-      "forceConsistentCasingInFileNames": true, 
-      "isolatedModules": true, 
+  "$schema": "https://www.schemastore.org/tsconfig",
+  "display": "Node 24",
+  "_version": "24.0.0",
 
-      "strict": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "moduleResolution": "node16"
-    },
-    "exclude": ["node_modules", "**/*.test.ts"]
-  }
+  "compilerOptions": {
+    "lib": ["es2024", "ESNext.Array", "ESNext.Collection", "ESNext.Iterator", "ESNext.Promise"],
+    "module": "nodenext",
+    "target": "es2024",
+
+    "preserveConstEnums": true,
+    "noEmit": true,
+    "sourceMap": false,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node16"
+  },
+  "exclude": ["node_modules", "**/*.test.ts"]
+}

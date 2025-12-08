@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "watch": "tsc --watch --project tsconfig.json",
     "prebuild": "rm -rf dist",
     "build": "esbuild src/handlers/*.ts --bundle --platform=node --target=node24 --format=esm --main-fields=module,main --outdir=dist --out-extension:.js=.mjs",
     "lint": "eslint . --fix --cache",
@@ -24,9 +25,11 @@
     "globals": "^16.5.0",
     "jiti": "^2.6.1",
     "prettier": "^3.7.1",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.0"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.940.0"
+    "@aws-sdk/client-dynamodb": "^3.940.0",
+    "@aws-sdk/lib-dynamodb": "^3.943.0"
   }
 }

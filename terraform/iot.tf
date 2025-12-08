@@ -1,7 +1,24 @@
-resource "aws_iot_topic_rule" "rule" {
+resource "aws_iot_topic_rule" "wireless" {
   name        = "CloudLightUplink"
   enabled     = true
   sql         = "SELECT * FROM 'CloudLight/received'"
+  sql_version = "2016-03-23"
+
+  lambda {
+    function_arn = aws_lambda_function.uplink.arn
+  }
+
+  error_action {
+    lambda {
+      function_arn = aws_lambda_function.uplink.arn
+    }
+  }
+}
+
+resource "aws_iot_topic_rule" "simulated" {
+  name        = "CloudLightUplinkSimulated"
+  enabled     = true
+  sql         = "SELECT data, clientId() AS clientId FROM 'CloudLight/simulated/received'"
   sql_version = "2016-03-23"
 
   lambda {
