@@ -160,10 +160,21 @@ if [[ -z "$AWS_ACCOUNT_ID" ]]; then
 fi
 echo "Using AWS Account ID: $AWS_ACCOUNT_ID"
 
+# check if frontend password is "null" (i.e. not provided)
+if [[ "$FRONTEND_PASSWORD" == "null" ]]; then
+    echo "Frontend password not provided - generating a password..."
+    PASSWORD=$(printf "%04d\n" $((RANDOM % 10000)))
+    update_env_var "FRONTEND_PASSWORD" "$PASSWORD"
+    echo "... generated password: $FRONTEND_PASSWORD"
+else
+    echo "Using provided frontend password"
+fi
+
 # Export terraform variables
 export TF_VAR_aws_region=$AWS_REGION
 export TF_VAR_aws_account_id=$AWS_ACCOUNT_ID
 export TF_VAR_product="cloud-light"
+export TF_VAR_frontend_password=$FRONTEND_PASSWORD
 
 # **********
 # ACTIONS

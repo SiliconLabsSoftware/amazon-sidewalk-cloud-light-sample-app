@@ -6,10 +6,6 @@ export const handler = async (
 ): Promise<APIGatewayProxyResultV2> => {
   console.log("HTTP event: ", JSON.stringify(event, null, 2));
   try {
-    const region = process.env.REGION;
-    if (!region) {
-      throw new Error("REGION environment variable is not set");
-    }
     return { statusCode: 200, body: JSON.stringify({ message: "Success" }) };
   } catch (error) {
     console.error(`Failed: ${error instanceof Error ? error.message : "Unknown error"}`);

@@ -27,3 +27,11 @@ variable "product" {
 variable "dynamodb_table" {
   default = "CloudLight"
 }
+
+variable "frontend_password" {
+  default = ""
+  validation {
+    condition     = length(var.frontend_password) > 0
+    error_message = "Frontend password is required"
+  }
+}
