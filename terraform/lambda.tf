@@ -96,8 +96,9 @@ resource "aws_lambda_function" "websocket" {
   role             = aws_iam_role.lambda_exec.arn
   environment {
     variables = {
-      REGION         = var.aws_region
-      DYNAMODB_TABLE = var.dynamodb_table
+      REGION            = var.aws_region
+      DYNAMODB_TABLE    = var.dynamodb_table
+      FRONTEND_PASSWORD = var.frontend_password
     }
   }
   logging_config {

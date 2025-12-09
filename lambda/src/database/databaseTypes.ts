@@ -24,7 +24,3 @@ export interface TemperatureMeasurement extends DatabaseEntry {
 export interface Connection extends DatabaseEntry {
   id: string;
 }
-
-export interface APIKey extends DatabaseEntry {
-  key: string;
-}
