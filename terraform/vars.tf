@@ -28,6 +28,10 @@ variable "dynamodb_table" {
   default = "CloudLight"
 }
 
+variable "api_stage" {
+  default = "prod"
+}
+
 variable "frontend_password" {
   default = ""
   validation {

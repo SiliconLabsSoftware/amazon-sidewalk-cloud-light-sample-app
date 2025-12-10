@@ -27,6 +27,6 @@ resource "aws_apigatewayv2_route" "app_http_api_gateway_resource_route" {
 
 resource "aws_apigatewayv2_stage" "http" {
   api_id      = aws_apigatewayv2_api.http.id
-  name        = "prod"
+  name        = var.api_stage
   auto_deploy = true
 }

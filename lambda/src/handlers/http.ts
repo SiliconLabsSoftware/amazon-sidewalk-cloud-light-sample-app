@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import { getDevice, listDevices } from "../database/device.ts";
+import { validatePassword } from "../lib/auth.ts";
 
 type RouteHandler = (event: APIGatewayProxyEventV2) => Promise<APIGatewayProxyResultV2>;
 
@@ -15,13 +16,6 @@ const jsonResponse = (statusCode: number, body: object): APIGatewayProxyResultV2
   headers: { "Content-Type": "application/json", ...corsHeaders },
   body: JSON.stringify(body),
 });
-
-const validatePassword = (authHeader: string | undefined): boolean => {
-  if (!authHeader) return false;
-  const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  if (!match) return false;
-  return match[1] === process.env.FRONTEND_PASSWORD;
-};
 
 const handleGetDevices: RouteHandler = async (event) => {
   if (!validatePassword(event.headers.authorization)) {

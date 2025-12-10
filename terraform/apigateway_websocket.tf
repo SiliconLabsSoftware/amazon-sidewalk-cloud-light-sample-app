@@ -76,6 +76,6 @@ resource "aws_apigatewayv2_deployment" "websocket" {
 
 resource "aws_apigatewayv2_stage" "websocket" {
   api_id        = aws_apigatewayv2_api.websocket.id
-  name          = "prod"
+  name          = var.api_stage
   deployment_id = aws_apigatewayv2_deployment.websocket.id
 }
