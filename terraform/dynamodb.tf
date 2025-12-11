@@ -1,5 +1,9 @@
+locals {
+  dynamodb_table = "CloudLight"
+}
+
 resource "aws_dynamodb_table" "table" {
-  name         = var.dynamodb_table
+  name         = local.dynamodb_table
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "PK"
   range_key    = "SK"

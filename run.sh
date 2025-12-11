@@ -173,7 +173,6 @@ fi
 # Export terraform variables
 export TF_VAR_aws_region=$AWS_REGION
 export TF_VAR_aws_account_id=$AWS_ACCOUNT_ID
-export TF_VAR_product="cloud-light"
 export TF_VAR_frontend_password=$FRONTEND_PASSWORD
 
 # **********
@@ -247,12 +246,12 @@ if [[ " ${args[@]} " =~ " outputs " ]]; then
     echo "==> Extracting Terraform outputs"
     pushd terraform >/dev/null
     rm -f .outputs.sh
-    # terraform output public_cloudfront_domain_name | tr '\n' ' ' | echo "export APP_PUBLIC_URL=$(cat -)" >>.outputs.sh
+    terraform output iot_endpoint | tr '\n' ' ' | echo "export IOT_ENDPOINT=$(cat -)" >>.outputs.sh
     terraform output rest_url | tr '\n' ' ' | echo "export APP_REST_URL=$(cat -)" >>.outputs.sh
     terraform output wss_url | tr '\n' ' ' | echo "export APP_WSS_URL=$(cat -)" >>.outputs.sh
-    # terraform output app_s3_bucket | tr '\n' ' ' | echo "export APP_S3_BUCKET=$(cat -)" >>.outputs.sh
-    # terraform output public_cloudfront_id | tr '\n' ' ' | echo "export CLOUDFRONT_ID=$(cat -)" >>.outputs.sh
-    terraform output iot_endpoint | tr '\n' ' ' | echo "export IOT_ENDPOINT=$(cat -)" >>.outputs.sh
+    terraform output frontend_s3_bucket | tr '\n' ' ' | echo "export FRONTEND_S3_BUCKET=$(cat -)" >>.outputs.sh
+    terraform output public_cloudfront_id | tr '\n' ' ' | echo "export CLOUDFRONT_ID=$(cat -)" >>.outputs.sh
+    terraform output public_cloudfront_domain_name | tr '\n' ' ' | echo "export FRONTEND_PUBLIC_URL=$(cat -)" >>.outputs.sh
     echo ""
     cat .outputs.sh
     popd >/dev/null
@@ -294,10 +293,14 @@ if [[ " ${args[@]} " =~ " ui " ]]; then
     npm run build
     rm -f .env
     echo "Deploying to S3..."
-    aws s3 sync --delete dist "s3://$APP_S3_BUCKET/"
+    aws s3 sync --delete dist "s3://$FRONTEND_S3_BUCKET/"
     echo "Invalidating CloudFront cache..."
     aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_ID" --paths "/*" >/dev/null
-    echo "Deployment complete: https://$APP_PUBLIC_URL"
+    echo ""
+    echo "------------------------------------------------"
+    echo "Deployment complete: https://$FRONTEND_PUBLIC_URL"
+    echo "------------------------------------------------"
+    echo ""
     popd >/dev/null
 fi
 

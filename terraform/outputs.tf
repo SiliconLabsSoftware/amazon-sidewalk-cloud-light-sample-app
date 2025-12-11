@@ -17,3 +17,15 @@ output "rest_url" {
 output "wss_url" {
   value = aws_apigatewayv2_stage.websocket.invoke_url
 }
+
+output "frontend_s3_bucket" {
+  value = aws_s3_bucket.frontend.bucket
+}
+
+output "public_cloudfront_id" {
+  value = aws_cloudfront_distribution.frontend.id
+}
+
+output "public_cloudfront_domain_name" {
+  value = aws_cloudfront_distribution.frontend.domain_name
+}

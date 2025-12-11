@@ -15,7 +15,7 @@ resource "aws_lambda_function" "uplink" {
   environment {
     variables = {
       REGION         = var.aws_region
-      DYNAMODB_TABLE = var.dynamodb_table
+      DYNAMODB_TABLE = local.dynamodb_table
       IOT_ENDPOINT   = "https://${data.aws_iot_endpoint.data_ats.endpoint_address}"
     }
   }
@@ -59,7 +59,7 @@ resource "aws_lambda_function" "http" {
   environment {
     variables = {
       REGION            = var.aws_region
-      DYNAMODB_TABLE    = var.dynamodb_table
+      DYNAMODB_TABLE    = local.dynamodb_table
       FRONTEND_PASSWORD = var.frontend_password
     }
   }
@@ -97,9 +97,9 @@ resource "aws_lambda_function" "websocket" {
   environment {
     variables = {
       REGION             = var.aws_region
-      DYNAMODB_TABLE     = var.dynamodb_table
+      DYNAMODB_TABLE     = local.dynamodb_table
       FRONTEND_PASSWORD  = var.frontend_password
-      WEBSOCKET_ENDPOINT = "https://${aws_apigatewayv2_api.websocket.id}.execute-api.${var.aws_region}.amazonaws.com/${var.api_stage}"
+      WEBSOCKET_ENDPOINT = "https://${aws_apigatewayv2_api.websocket.id}.execute-api.${var.aws_region}.amazonaws.com/${local.api_stage}"
     }
   }
   logging_config {
@@ -199,7 +199,7 @@ resource "aws_iam_policy" "policy" {
                 "dynamodb:Query",
                 "dynamodb:UpdateItem"
             ],
-            "Resource": "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.dynamodb_table}"
+            "Resource": "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${local.dynamodb_table}"
         }
     ]
 }
