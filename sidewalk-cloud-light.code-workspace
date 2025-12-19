@@ -1,17 +1,21 @@
 {
-	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "lambda"
-		},
-		{
-			"path": "frontend"
-		},
-		{
-			"path": "terraform"
-		}
-	],
-	"settings": {}
+  "folders": [
+	{
+		"path": "."
+	},
+	{
+		"path": "lambda"
+	},
+	{
+		"path": "frontend"
+	},
+	{
+		"path": "terraform"
+	}
+],
+  "settings": {
+    "files.associations": {
+      "*.css": "tailwindcss"
+      },
+  }
 }

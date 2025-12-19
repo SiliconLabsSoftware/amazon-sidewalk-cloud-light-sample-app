@@ -1,4 +1,3 @@
-@import "./base.css";
 @import "tailwindcss";
 
 @layer base {
@@ -9,35 +8,63 @@
 }
 
 @theme {
-  --font-display: "Satoshi", "sans-serif";
-  --breakpoint-3xl: 120rem;
-  --color-avocado-100: oklch(0.99 0 0);
-  --color-avocado-200: oklch(0.98 0.04 113.22);
-  --color-avocado-300: oklch(0.94 0.11 115.03); /* ... */
+  /* Silicon Labs Red: */
+  --color-sl-red-500: #d91e2a;
+  --color-sl-red-600: #c81d26;
+  /* Heritage Brick: */
+  --color-heritage-brick: #7d1214;
+
+  /* Gray: */
+  --color-gray-1: #555555;
+  --color-gray-2: #7c7c7c;
+  --color-gray-3: #c2c2c2;
+  --color-gray-4: #d4d4d4;
+  --color-gray-5: #e1e1e1;
+  --color-gray-6: #f5f5f5;
+
+  /* OOB */
+  --color-sl-gray-100: #f2f2f2;
+  --color-sl-gray-200: #ececec;
+  --color-sl-gray-300: #cccccc;
+  --color-sl-gray-400: #cccccc;
+  --color-sl-gray-500: #7c7c7c;
+  --color-sl-gray-600: #777777;
+  --color-sl-gray-700: #666666;
+  --color-sl-gray-800: #666666;
+  --color-sl-gray-900: #333333;
+
+  --color-sl-blue-100: #c3d8ff;
+  --color-sl-blue-200: #c3d8ff;
+  --color-sl-blue-300: #4c8afe;
+  --color-sl-blue-400: #4c8afe;
+  --color-sl-blue-500: #0f62fe;
+  --color-sl-blue-600: #0f62fe;
+  --color-sl-blue-700: #0147ca;
+  --color-sl-blue-800: #0147ca;
+  --color-sl-blue-900: #013086;
 }
 
 #app {
-  max-width: 1280px;
+  /* max-width: 1280px; */
   margin: 0 auto;
-  padding: 2rem;
   font-weight: normal;
+  @apply min-h-screen bg-[url('/images/organic-4-alt.jpg')] bg-cover;
 }
 
-a,
-.green {
+/* a {
   text-decoration: none;
   color: hsla(160, 100%, 37%, 1);
   transition: 0.4s;
   padding: 3px;
-}
+} */
 
-@media (hover: hover) {
+/* @media (hover: hover) {
   a:hover {
     background-color: hsla(160, 100%, 37%, 0.2);
   }
-}
+} */
 
-@media (min-width: 1024px) {
+/* @media (min-width: 1024px) {
   body {
     display: flex;
     place-items: center;
@@ -48,4 +75,40 @@ a,
     grid-template-columns: 1fr 1fr;
     padding: 0 2rem;
   }
+} */
+
+/*
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
 }
+
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-background);
+  transition:
+    color 0.5s,
+    background-color 0.5s;
+  line-height: 1.6;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
+    sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+} */

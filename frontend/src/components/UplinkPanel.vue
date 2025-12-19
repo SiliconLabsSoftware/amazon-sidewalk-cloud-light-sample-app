@@ -1,0 +1,67 @@
+<script setup lang="ts">
+// import { storeToRefs } from "pinia";
+// import { useDeviceStore } from "@/stores/device";
+import { computed, ref } from "vue";
+import CardPanel from "@/components/CardPanel.vue";
+
+// const deviceStore = useDeviceStore();
+// const { lastUpdate } = storeToRefs(deviceStore);
+const lastUpdate = ref(new Date());
+const monthTable = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const lastUpdatedTime = computed(() => {
+  const d = new Date(lastUpdate.value);
+  const month = d.getMonth();
+  const year = d.getFullYear();
+  const date = d.getDate();
+
+  const rawMinute = d.getMinutes();
+  const minute = rawMinute <= 9 ? "0" + rawMinute : rawMinute;
+
+  const rawHour = d.getHours();
+  const hour = rawHour % 12;
+  let meridiem = "AM";
+  if (rawHour > 11 && rawHour < 24) {
+    meridiem = "PM";
+  }
+  return `${monthTable[month]} ${date}, ${year} @ ${hour}:${minute} ${meridiem}`;
+});
+</script>
+
+<template>
+  <CardPanel>
+    <div class="p-4 text-left text-[26px]">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="mr-2 inline-block w-10"
+        viewBox="0 0 40.3 28"
+        style="enable-background: new 0 0 40.3 28"
+        xml:space="preserve"
+      >
+        <path
+          d="m8.2 2.8-.7-.6c0-.1-.2-.2-.3-.2s-.3.1-.4.2C3.8 5.3 2.2 9.5 2.2 14s1.6 8.6 4.6 11.9c.1 0 .2.1.4.1s.3-.1.4-.1l.7-.7c.1-.1.2-.2.2-.4s-.1-.2-.2-.4c-2.6-2.8-4-6.5-4-10.4 0-3.9 1.4-7.6 4-10.4.1-.1.2-.2.2-.4s-.2-.2-.3-.4zm5.3 4.4-.7-.7c-.1-.1-.2-.1-.4-.1s-.2 0-.4.1c-1.6 1.8-2.9 5.1-2.9 7.5 0 2.4 1.3 5.8 2.9 7.6.1.1.2.1.4.1s.3-.1.4-.1l.7-.8c.1-.1.2-.2.2-.3s-.1-.2-.2-.4c-1.2-1.4-2.2-4.2-2.2-6.1 0-1.9 1-4.6 2.2-6.1.1-.1.1-.2.1-.4s-.1-.2-.1-.3zm20.1-5c-.1-.1-.3-.2-.4-.2s-.3.1-.4.2l-.7.7c-.1.1-.1.2-.1.3s.1.2.2.4c2.6 2.8 4.1 6.5 4.1 10.4 0 3.9-1.4 7.6-4.1 10.4-.2.1-.2.3-.2.4s.1.2.2.4l.7.7c.1.1.2.2.4.2s.2-.1.4-.2c2.9-3.2 4.6-7.4 4.6-11.9s-1.8-8.7-4.7-11.8zM20.2 10c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm7.4-9.5-.7.7c-.1.1-.2.2-.2.4s.1.2.2.4c1.2 1.4 2.2 4.2 2.2 6.1 0 1.9-1 4.6-2.2 6.1-.1.1-.2.2-.2.4s.1.2.2.4l.7.7c.1.1.2.2.4.2s.2-.1.4-.2c1.6-1.8 2.9-5.1 2.9-7.5S30 8.4 28.4 6.6c-.1-.1-.2-.1-.4-.1s-.3-.1-.4 0z"
+          style="fill: #555"
+        />
+      </svg>
+      <span class="text-bold">Uplink</span>
+    </div>
+    <div class="bg-sl-gray-700 p-3 text-[12px] text-white">
+      Last updated <strong>{{ lastUpdatedTime }}</strong>
+    </div>
+    <div class="p-4">
+      <slot></slot>
+    </div>
+  </CardPanel>
+</template>
