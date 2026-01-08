@@ -34,10 +34,19 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach(async (to, from) => {
+router.beforeEach((to, from) => {
   const applicationStore = useApplicationStore();
-  if (!applicationStore.isAuthenticated && to.name !== "login") {
-    return { name: "login" };
+
+  if (applicationStore.isAuthenticating && to.name !== "login") {
+    return true; // let component handle loading
+  }
+
+  if (
+    !applicationStore.isAuthenticating &&
+    !applicationStore.isAuthenticated &&
+    to.name !== "login"
+  ) {
+    return { name: "login", query: { redirect: to.fullPath } };
   }
 });
 

@@ -11,8 +11,9 @@ import initializeStores from "./boot/stores";
 const app = createApp(App);
 
 app.use(createPinia());
-app.use(router);
 
 initializeStores();
+
+app.use(router);
 
 app.mount("#app");

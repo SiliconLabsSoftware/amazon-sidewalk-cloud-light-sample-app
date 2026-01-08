@@ -278,6 +278,16 @@ if [[ " ${args[@]} " =~ " ui-deps " ]]; then
     popd >/dev/null
 fi
 
+if [[ " ${args[@]} " =~ " outputs-to-ui " ]]; then
+    echo "==> Copying Terraform outputs to frontend"
+    source terraform/.outputs.sh
+    pushd frontend >/dev/null
+    rm -f .env
+    echo VITE_REST_URL=\"$APP_REST_URL\" > .env
+    echo VITE_WSS_URL=\"$APP_WSS_URL\" >> .env
+    popd >/dev/null
+fi
+
 if [[ " ${args[@]} " =~ " ui " ]]; then
     echo "==> Deploying frontend"
     if [[ ! -f "terraform/.outputs.sh" ]]; then

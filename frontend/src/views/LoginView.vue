@@ -1,21 +1,32 @@
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from "vue";
-import { useRouter } from "vue-router";
-import BusySpinner from "@/components/BusySpinner.vue";
+import { onBeforeMount, computed, ref, useTemplateRef } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 import { useApplicationStore } from "@/stores/application";
-// import { storeToRefs } from "pinia";
+import BusySpinner from "@/components/BusySpinner.vue";
+
 const applicationStore = useApplicationStore();
+
+const { authErrorMessage } = storeToRefs(applicationStore);
+onBeforeMount(() => {
+  authErrorMessage.value = null;
+});
+
 const router = useRouter();
+const route = useRoute();
 const loading = ref(false);
 
 async function submit() {
   loading.value = true;
   try {
-    await activate(pin.value);
-  } catch (error) {
-    // TODO
+    await applicationStore.authenticate(password.value);
+  } catch {
+    // do nothing
   } finally {
     loading.value = false;
+    if (applicationStore.isAuthenticated) {
+      router.push((route.query.redirect as string) || "/devices");
+    }
   }
 }
 
@@ -50,13 +61,13 @@ const copyright = computed(() => {
         </h1>
         <p class="mb-6 text-sl-gray-900">Enter application password to continue</p>
 
-        <div v-if="loading">
+        <div v-if="loading || applicationStore.isAuthenticating">
           <BusySpinner class="mx-auto my-16 w-full" />
           <p class="mx-auto w-[200px] text-sl-gray-800">Logging in</p>
         </div>
         <form v-else @submit.prevent="submit">
           <label for="password" class="sr-only">Enter application password</label>
-          <div class="relative mb-10 text-right">
+          <div class="relative text-right">
             <input
               type="password"
               v-model="password"
@@ -65,6 +76,7 @@ const copyright = computed(() => {
               required
               class="w-full rounded border border-sl-gray-300 px-3 py-3 text-center text-[14px] placeholder-sl-gray-400 focus:border-sl-blue-500 focus:ring-sl-blue-500 sm:max-w-xs"
               placeholder="Password"
+              autofocus
             />
             <a
               aria-label="clear password input"
@@ -73,22 +85,19 @@ const copyright = computed(() => {
               >clear password</a
             >
           </div>
+          <p v-if="authErrorMessage" class="mt-4 text-red-500">
+            {{ authErrorMessage }}
+          </p>
           <button
             type="submit"
-            class="flex w-full items-center justify-center rounded border border-transparent bg-sl-blue-500 p-2 text-base font-medium text-white uppercase hover:bg-sl-blue-700 focus:ring-2 focus:ring-sl-blue-500 focus:ring-offset-2 focus:outline-none"
+            :disabled="loading"
+            class="mt-8 flex w-full items-center justify-center rounded border border-transparent bg-sl-blue-500 p-2 text-base font-medium text-white uppercase hover:bg-sl-blue-700 focus:ring-2 focus:ring-sl-blue-500 focus:ring-offset-2 focus:outline-none"
           >
             Continue
           </button>
         </form>
       </div>
     </div>
-    <!-- <UserMessage
-      v-if="error"
-      class="fixed bottom-8 left-[calc(50%-180px)] mx-auto"
-      :msg="errorMsg"
-      type="error"
-      @messageClose="messageClose()"
-    ></UserMessage> -->
     <div class="w-full text-[10px] dark:text-white">
       {{ copyright }}
     </div>
