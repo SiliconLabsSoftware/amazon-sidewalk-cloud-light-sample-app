@@ -2,6 +2,7 @@ import type {
   APIGatewayProxyWebsocketEventV2,
   APIGatewayProxyEventHeaders,
   APIGatewayProxyResultV2,
+  APIGatewayProxyEventQueryStringParameters,
 } from "aws-lambda";
 import { createConnection, deleteConnection } from "../database/connection.ts";
 import { validatePassword } from "../lib/auth.ts";
@@ -9,12 +10,17 @@ import { validatePassword } from "../lib/auth.ts";
 // Extended type for $connect event which includes headers
 interface WebSocketConnectEvent extends APIGatewayProxyWebsocketEventV2 {
   headers?: APIGatewayProxyEventHeaders;
+  queryStringParameters?: APIGatewayProxyEventQueryStringParameters;
 }
 
 const handleConnect = async (event: WebSocketConnectEvent): Promise<APIGatewayProxyResultV2> => {
   const connectionId = event.requestContext.connectionId;
 
-  if (!validatePassword(event.headers?.authorization || event.headers?.Authorization)) {
+  if (
+    !validatePassword(
+      event.queryStringParameters?.authorization || event.queryStringParameters?.Authorization,
+    )
+  ) {
     console.log(`Connection rejected - invalid password`);
     return { statusCode: 401, body: "Unauthorized" };
   }

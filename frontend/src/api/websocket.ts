@@ -48,7 +48,7 @@ export class WebSocketApi {
 
     try {
       const url = new URL(WSS_URL);
-      url.searchParams.set("authorization", this.password);
+      url.searchParams.set("authorization", `Bearer ${this.password}`);
       this.ws = new WebSocket(url.toString());
 
       this.ws.onopen = this.handleOpen.bind(this);

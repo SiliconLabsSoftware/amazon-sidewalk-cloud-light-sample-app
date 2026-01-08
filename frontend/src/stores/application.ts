@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import { createHttpApi } from "@/api/http";
+import { createWebSocketApi } from "@/api/websocket";
 
 export const useApplicationStore = defineStore("application", () => {
   const initialize = async () => {
@@ -33,9 +34,20 @@ export const useApplicationStore = defineStore("application", () => {
   };
   const authenticate = async (password: string) => {
     const httpApi = createHttpApi(password);
+    const websocketApi = createWebSocketApi(password);
+    websocketApi.onMessage((message) => {
+      console.log("Message received:", message);
+    });
+    websocketApi.onStateChange((state) => {
+      console.log("State changed:", state);
+    });
+    websocketApi.onError((error) => {
+      console.error("Error:", error);
+    });
     isAuthenticating.value = true;
     try {
       await httpApi.getDevices();
+      websocketApi.connect();
       isAuthenticated.value = true;
       setPassword(password);
     } catch (error) {
