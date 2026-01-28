@@ -9,7 +9,6 @@ CONFIG_FILE_SAMPLE="./configure.sh-sample"
 
 # These are mandatory to be provided either via ENV or in the config file:
 required_vars=(
-    "AWS_PROFILE"
     "AWS_REGION"
     "TERRAFORM_BACKEND_BUCKET"
     "FRONTEND_PASSWORD"
@@ -149,9 +148,12 @@ elif [[ $num_missing -gt 0 ]]; then
     exit 1
 fi
 
-# Find AWS Account ID based on credentials
+# Find AWS Account ID based on credentials (and thereby validate credentials)
 if ! AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text 2>/dev/null); then
     echo "Error: Failed to retrieve AWS Account ID. Please check your AWS credentials." >&2
+    echo "Example ways to provide AWS credentials:" >&2
+    echo "  - set environment variables AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY (+ optional AWS_SESSION_TOKEN), or" >&2
+    echo "  - set env or configure.sh variable AWS_PROFILE (with ~/.aws/credentials mounted into the container)" >&2
     exit 1
 fi
 if [[ -z "$AWS_ACCOUNT_ID" ]]; then
@@ -229,6 +231,20 @@ if [[ " ${args[@]} " =~ " plan " ]]; then
     popd >/dev/null
 fi
 
+if [[ " ${args[@]} " =~ " lambda-deps " ]]; then
+    echo "==> Installing lambda dependencies"
+    pushd lambda >/dev/null
+    npm install
+    popd >/dev/null
+fi
+
+if [[ " ${args[@]} " =~ " lambda-build " ]]; then
+    echo "==> Building lambda functions"
+    pushd lambda >/dev/null
+    npm run build
+    popd >/dev/null
+fi
+
 if [[ " ${args[@]} " =~ " tf " ]]; then
     echo "==> Deploying Terraform infrastructure"
     echo "Building lambda functions..."
@@ -254,20 +270,6 @@ if [[ " ${args[@]} " =~ " outputs " ]]; then
     terraform output public_cloudfront_domain_name | tr '\n' ' ' | echo "export FRONTEND_PUBLIC_URL=$(cat -)" >>.outputs.sh
     echo ""
     cat .outputs.sh
-    popd >/dev/null
-fi
-
-if [[ " ${args[@]} " =~ " lambda-deps " ]]; then
-    echo "==> Installing lambda dependencies"
-    pushd lambda >/dev/null
-    npm install
-    popd >/dev/null
-fi
-
-if [[ " ${args[@]} " =~ " lambda-build " ]]; then
-    echo "==> Building lambda functions"
-    pushd lambda >/dev/null
-    npm run build
     popd >/dev/null
 fi
 

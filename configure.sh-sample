@@ -1,6 +1,9 @@
 # mandatory to configure:
-export AWS_PROFILE="default"
 export AWS_REGION="us-east-1"
+
+# set this if you use credentials file / profile-based authentication
+# do not set if you use environment variables (e.g. in CI/CD pipeline)
+export AWS_PROFILE="default"
 
 # optional (will be generated if left empty):
 export TERRAFORM_BACKEND_BUCKET=""
