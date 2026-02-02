@@ -1,8 +1,10 @@
-# mandatory to configure:
+# AWS region to deploy into:
+# must be set, must be a valid Sidewalk-enabled region
 export AWS_REGION="us-east-1"
 
+# AWS credentials profile used to deploy with:
 # set this if you use credentials file / profile-based authentication
-# do not set if you use environment variables (e.g. in CI/CD pipeline)
+# comment out if you use environment variables (e.g. in CI/CD pipeline)
 export AWS_PROFILE="default"
 
 # optional (will be generated if left empty):
