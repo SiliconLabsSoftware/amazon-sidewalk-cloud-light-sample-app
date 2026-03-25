@@ -26,7 +26,7 @@ After registration, time sync, and Sidewalk connection, the device initiates the
 
 #### 1a. Pairing Request
 
-The device sends its application identifier, protocol version, and SMSN:
+The device sends its application identifier, protocol version, and optionally its SMSN:
 
 ```
 < $<protocol_version>+<app_id>#<smsn>
@@ -36,12 +36,13 @@ Example:
 
 ```
 < $v1+cloud_light#50D141AA10EE03D533AF80F96F5ED5FA
+< $v1+cloud_light
 ```
 
 - `$` - the setup message verb
 - `protocol_version` — integer protocol version
 - `app_id` — application identifier string (i.e. `cloud_light`)
-- `smsn` — Sidewalk Manufacturing Serial Number
+- `smsn` — Sidewalk Manufacturing Serial Number. Simulated devices are not required to send it
 
 #### 1b. Cloud Response
 
