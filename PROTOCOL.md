@@ -16,6 +16,21 @@ Messages consist of a verb (typically a single character) followed by parameters
 - Only the NOTIFY Sidewalk message type is used.
 - Sidewalk stack-level acknowledgements are used for important messages.
 
+## Overview of messages
+
+| Direction | Verb / Type | Format                         | Description                |
+|-----------|-------------|--------------------------------|----------------------------|
+| up        | $           | `$<ver>+<app_id>#<smsn>`       | Pairing request            |
+| down      | url         | `url <magic_url>`              | Setup URL                  |
+| down      | ready       | `ready`                        | Setup complete signal      |
+| up        | \|          | `\|<cap>[\|<cap>...]`          | Capability advertisement   |
+| up        | :           | `:key=value[:key=value...]`    | Sensor state update        |
+| down      | :           | `:key=value[:key=value...]`    | Actuator command           |
+| up        | ping        | `!ping=<timestamp>`            | Latency ping               |
+| down      | pong        | `!pong=<timestamp>`            | Ping response              |
+| down      | tink        | `!tink=<timestamp>`            | Latency request from cloud |
+| up        | tonk        | `!tonk=<timestamp>`            | Response to tink           |
+
 ## Message Flow
 
 In the examples below, `<` denotes device-to-cloud (uplink) and `>` denotes cloud-to-device (downlink).
@@ -183,8 +198,8 @@ Text to display:
 The device can send a ping to measure round-trip latency:
 
 ```
-< ping <timestamp>
-> pong <timestamp>
+< !ping=<timestamp>
+> !pong=<timestamp>
 ```
 
 The timestamp is epoch milliseconds.
@@ -192,6 +207,6 @@ The timestamp is epoch milliseconds.
 The web UI can also initiate a latency check:
 
 ```
-> tink <timestamp>
-< tonk <timestamp>
+> !tink=<timestamp>
+< !tonk=<timestamp>
 ```

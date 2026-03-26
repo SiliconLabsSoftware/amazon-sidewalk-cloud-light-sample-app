@@ -44,6 +44,13 @@ let pingTimer = null;
 // Protocol — Parsing & Messaging
 // ---------------------------------------------------------------------------
 
+function separateMessage(message, separator) {
+  const pos = message.indexOf(separator);
+  const verb = pos < 0 ? message : message.substring(0, pos);
+  const data = pos < 0 ? null : message.substring(pos + 1);
+  return { verb, data };
+}
+
 function parse(s) {
   const messages = [];
 
@@ -61,10 +68,12 @@ function parse(s) {
     return messages;
   }
 
-  const pos = s.indexOf(" ");
-  const verb = pos < 0 ? s : s.substring(0, pos);
-  const data = pos < 0 ? null : s.substring(pos + 1);
-  messages.push({ verb, data });
+  if (s[0] === "!") {
+    messages.push(separateMessage(s, "="));
+    return messages;
+  }
+
+  messages.push(separateMessage(s, " "));
   return messages;
 }
 
@@ -81,11 +90,11 @@ function handleMessage(verb, data) {
     case "ready":
       transition("ready");
       break;
-    case "pong":
+    case "!pong":
       capabilities.ping.value = Date.now() - Number(data);
       break;
-    case "tink":
-      send(`tonk ${data}`);
+    case "!tink":
+      send(`!tonk=${data}`);
       break;
     case ":":
       const [key, val] = data.split("=").map((s) => s.trim());
@@ -248,7 +257,7 @@ function toggleConnection() {
 }
 
 function ping() {
-  send(`ping ${Date.now()}`);
+  send(`!ping=${Date.now()}`);
 }
 
 function startPingTimer() {
