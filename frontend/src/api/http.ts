@@ -7,7 +7,6 @@ export interface Device {
   type: "sidewalk" | "mqtt";
   capabilities: string[];
   seq: number;
-  fragSeq: number;
   expires: number;
 }
 

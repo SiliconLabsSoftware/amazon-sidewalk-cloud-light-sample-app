@@ -34,7 +34,6 @@ export const handler = async (
       type: uplinkType,
       capabilities: [],
       seq: 0,
-      fragSeq: 0,
     });
   }
 

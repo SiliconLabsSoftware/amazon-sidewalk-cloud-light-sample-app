@@ -28,7 +28,6 @@ export const listDevices = async (): Promise<DeviceWithId[]> => {
     type: item.type,
     capabilities: item.capabilities,
     seq: item.seq,
-    fragSeq: item.fragSeq,
     expires: item.expires,
   })) as DeviceWithId[];
 };
@@ -45,7 +44,6 @@ export const createDevice = async (
       type: device.type,
       capabilities: device.capabilities,
       seq: device.seq,
-      fragSeq: device.fragSeq,
       expires: newExpiresTimestamp(),
     },
   });
