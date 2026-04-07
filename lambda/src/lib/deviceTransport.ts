@@ -28,11 +28,10 @@ export class MqttDeviceTransport extends DeviceTransport {
   }
 
   async sendPacket(deviceId: string, packet: string): Promise<void> {
-    const payload = new TextEncoder().encode(JSON.stringify({ data: packet }));
     await iotDataClient.send(
       new PublishCommand({
-        topic: `CloudLight/simulated/downlink`,
-        payload,
+        topic: `CloudLight/simulated/${deviceId}/downlink`,
+        payload: packet,
         qos: 1,
       }),
     );

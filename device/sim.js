@@ -19,8 +19,8 @@ const PROTOCOL_VERSION = "v1";
 const PING_INTERVAL_MS = 30000;
 
 const topics = {
-  in: "CloudLight/simulated/downlink",
-  out: "CloudLight/simulated/received",
+  in: `CloudLight/simulated/${opts.clientId}/downlink`,
+  out: `CloudLight/simulated/${opts.clientId}/received`,
 };
 
 // ---------------------------------------------------------------------------

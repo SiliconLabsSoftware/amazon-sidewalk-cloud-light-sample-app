@@ -18,7 +18,7 @@ resource "aws_iot_topic_rule" "wireless" {
 resource "aws_iot_topic_rule" "simulated" {
   name        = "CloudLightUplinkSimulated"
   enabled     = true
-  sql         = "SELECT data, clientId() AS clientId FROM 'CloudLight/simulated/received'"
+  sql         = "SELECT data, clientId() AS clientId FROM 'CloudLight/simulated/+/received'"
   sql_version = "2016-03-23"
 
   lambda {
