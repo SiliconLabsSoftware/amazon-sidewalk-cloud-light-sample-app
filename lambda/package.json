@@ -5,6 +5,9 @@
   "private": true,
   "scripts": {
     "watch": "tsc --watch --project tsconfig.json",
+    "type-check": "tsc --noEmit",
+    "tc": "npm run type-check",
+    "tsc": "npm run type-check",
     "prebuild": "rm -rf dist",
     "build": "esbuild src/handlers/*.ts --bundle --platform=node --target=node24 --format=esm --main-fields=module,main --outdir=dist --out-extension:.js=.mjs",
     "lint": "eslint . --fix --cache",
@@ -34,6 +37,8 @@
   "dependencies": {
     "@aws-sdk/client-apigatewaymanagementapi": "^3.947.0",
     "@aws-sdk/client-dynamodb": "^3.940.0",
+    "@aws-sdk/client-iot-data-plane": "^3.1018.0",
+    "@aws-sdk/client-iot-wireless": "^3.1018.0",
     "@aws-sdk/lib-dynamodb": "^3.943.0"
   }
 }

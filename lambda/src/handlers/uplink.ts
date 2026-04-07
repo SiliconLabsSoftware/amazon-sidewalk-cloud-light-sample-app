@@ -1,60 +1,171 @@
-import type { Context } from "aws-lambda";
-
-import { createDevice, getDevice } from "../database/device.ts";
+import type { Device, DeviceWithId } from "../database/databaseTypes.ts";
+import type { SidewalkUplinkMessage, SimulatedDeviceUplinkMessage } from "./types.ts";
+import {
+  createDevice,
+  getDevice,
+  refreshDeviceTtl,
+  updateDeviceCapabilities,
+  updateDeviceState,
+} from "../database/device.ts";
+import { parseMessage } from "../lib/deviceProtocolParser.ts";
+import { MagicUrlMessage, PongMessage, ReadyMessage } from "../lib/deviceProtocolBuilder.ts";
+import type { WsDeviceUpdateMessage, WsTonkMessage } from "../lib/websockerTypes.ts";
+import { broadcastToClients } from "../lib/websocketPublish.ts";
+import {
+  DeviceTransport,
+  MqttDeviceTransport,
+  WirelessDeviceTransport,
+} from "../lib/deviceTransport.ts";
 
 export const handler = async (
   event: SidewalkUplinkMessage | SimulatedDeviceUplinkMessage,
-  context: Context,
 ): Promise<string> => {
-  console.log("Uplink event: ", JSON.stringify(event, null, 2));
+  console.log("Uplink event:", JSON.stringify(event, null, 2));
 
   let deviceId: string;
-  let message: string;
+  let rawMessage: string;
   let uplinkType: "sidewalk" | "mqtt";
+  let transport: DeviceTransport;
 
   if ("clientId" in event) {
-    // Simulated (MQTT) device
     uplinkType = "mqtt";
     deviceId = event.clientId;
-    message = event.data;
+    transport = new MqttDeviceTransport();
+    rawMessage = event.data;
   } else if ("WirelessDeviceId" in event) {
-    // Sidewalk device
     uplinkType = "sidewalk";
     deviceId = event.WirelessDeviceId;
-    throw new Error("Sidewalk uplink not implemented");
+    transport = new WirelessDeviceTransport();
+    rawMessage = event.PayloadData;
   } else {
-    throw new Error("Invalid uplink event");
+    console.warn("Invalid uplink event — ignoring");
+    return "Invalid event";
+  }
+
+  const message = transport.decodeMessage(rawMessage);
+
+  if (!message || message.trim().length === 0) {
+    console.log("Empty message — returning gracefully");
+    return "Empty message";
+  }
+
+  const parsed = parseMessage(message);
+  console.log("Parsed message:", JSON.stringify(parsed));
+
+  if (parsed.verb === "pairing") {
+    await handlePairing(deviceId, uplinkType, parsed, transport);
+    return "Success";
   }
 
   const device = await getDevice(deviceId);
-  if (device) {
-    console.log("Device: ", JSON.stringify(device, null, 2), message);
-  } else {
-    await createDevice(deviceId, {
-      type: uplinkType,
-      capabilities: [],
-      seq: 0,
-    });
+  if (!device) {
+    console.warn(`Message from unknown device ${deviceId} (verb: ${parsed.verb}) — skipping`);
+    return "Unknown device";
+  }
+
+  switch (parsed.verb) {
+    case "capability":
+      await handleCapability(deviceId, device, parsed.capabilities);
+      break;
+    case "state":
+      await handleState(deviceId, device, parsed.entries);
+      break;
+    case "ping":
+      await handlePing(deviceId, device, parsed.timestamp, transport);
+      break;
+    case "tonk":
+      await handleTonk(deviceId, parsed.timestamp);
+      break;
+    case "unknown":
+      console.log(`Unknown verb from ${deviceId}: ${parsed.raw}`);
+      break;
   }
 
   return "Success";
 };
 
-interface SidewalkUplinkMessage {
-  PayloadData: string;
-  WirelessDeviceId: string;
-  WirelessMetadata: {
-    Sidewalk: {
-      CmdExStatus: string;
-      SidewalkId: string;
-      Seq: number;
-      MessageType: string;
-      Timestamp: string;
-    };
+async function handlePairing(
+  deviceId: string,
+  uplinkType: "sidewalk" | "mqtt",
+  parsed: { version: string; appId: string; smsn?: string },
+  transport: DeviceTransport,
+): Promise<void> {
+  const device: Device = {
+    type: uplinkType,
+    protocolVersion: parsed.version,
+    smsn: parsed.smsn,
+    capabilities: [],
+    state: {},
+    seq: 0,
+    expires: 0,
   };
+
+  await createDevice(deviceId, device);
+
+  const smsn = parsed.smsn ?? deviceId;
+  const baseUrl = process.env.BASE_URL!;
+  const password = process.env.FRONTEND_PASSWORD!;
+
+  const createdDevice = (await getDevice(deviceId))!;
+
+  const urlMsg = new MagicUrlMessage({ baseUrl, password, smsn });
+  await transport.sendPacket(deviceId, urlMsg.toString());
+  await transport.sendPacket(deviceId, new ReadyMessage().toString());
+
+  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: createdDevice };
+  await broadcastToClients(wsMessage);
 }
 
-interface SimulatedDeviceUplinkMessage {
-  clientId: string;
-  data: string;
+async function handleCapability(
+  deviceId: string,
+  device: DeviceWithId,
+  capabilities: Device["capabilities"],
+): Promise<void> {
+  await updateDeviceCapabilities(deviceId, capabilities);
+
+  const updated: DeviceWithId = { ...device, capabilities };
+  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
+  await broadcastToClients(wsMessage);
+}
+
+async function handleState(
+  deviceId: string,
+  device: DeviceWithId,
+  entries: { key: string; value: string }[],
+): Promise<void> {
+  const knownKeys = new Set(device.capabilities.map((c) => c.key));
+  const filtered = entries.filter((e) => knownKeys.has(e.key));
+
+  if (filtered.length === 0) {
+    console.log(`No matching capability keys for state update on ${deviceId}`);
+    return;
+  }
+
+  await updateDeviceState(deviceId, filtered);
+
+  const updatedState = { ...device.state };
+  for (const entry of filtered) {
+    updatedState[entry.key] = entry.value;
+  }
+
+  const updated: DeviceWithId = { ...device, state: updatedState };
+  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
+  await broadcastToClients(wsMessage);
+}
+
+async function handlePing(
+  deviceId: string,
+  device: DeviceWithId,
+  timestamp: string,
+  transport: DeviceTransport,
+): Promise<void> {
+  const pong = new PongMessage({ timestamp });
+  await transport.sendPacket(deviceId, pong.toString());
+  await refreshDeviceTtl(deviceId);
+}
+
+async function handleTonk(deviceId: string, timestamp: string): Promise<void> {
+  const wsMessage: WsTonkMessage = { type: "tonk", deviceId, timestamp };
+  await broadcastToClients(wsMessage);
+  await refreshDeviceTtl(deviceId);
 }

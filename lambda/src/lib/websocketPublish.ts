@@ -4,13 +4,14 @@ import {
   GoneException,
 } from "@aws-sdk/client-apigatewaymanagementapi";
 import { listConnections, deleteConnection } from "../database/connection.ts";
+import type { WsMessage } from "./websockerTypes.ts";
 
 const apiClient = new ApiGatewayManagementApiClient({
   region: process.env.REGION,
   endpoint: process.env.WEBSOCKET_ENDPOINT,
 });
 
-export const broadcastToClients = async (message: Record<string, unknown>): Promise<void> => {
+export const broadcastToClients = async (message: WsMessage): Promise<void> => {
   const connections = await listConnections();
   const sendPromises = connections.map(async (connectionId) => {
     try {
@@ -27,10 +28,7 @@ export const broadcastToClients = async (message: Record<string, unknown>): Prom
   await Promise.all(sendPromises);
 };
 
-export const sendToClient = async (
-  connectionId: string,
-  message: Record<string, unknown>,
-): Promise<void> => {
+export const sendToClient = async (connectionId: string, message: WsMessage): Promise<void> => {
   const command = new PostToConnectionCommand({
     ConnectionId: connectionId,
     Data: JSON.stringify(message),

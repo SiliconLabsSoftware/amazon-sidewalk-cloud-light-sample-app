@@ -1,51 +1,138 @@
-import { GetCommand, PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { GetCommand, PutCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import client from "./client.ts";
-import type { Device } from "./databaseTypes.ts";
+import type { Capability, Device, DeviceWithId } from "./databaseTypes.ts";
 import { newExpiresTimestamp } from "./utils.ts";
 
-export interface DeviceWithId extends Device {
-  deviceId: string;
-}
+const DEVICES_PK = "devices";
 
-export const getDevice = async (deviceId: string): Promise<Device | undefined> => {
+export const getDevice = async (deviceId: string): Promise<DeviceWithId | undefined> => {
   const command = new GetCommand({
     TableName: process.env.DYNAMODB_TABLE,
-    Key: { PK: deviceId, SK: "device" },
+    Key: { PK: DEVICES_PK, SK: deviceId },
   });
   const response = await client.send(command);
-  return response.Item as Device | undefined;
+  if (!response.Item) return undefined;
+  const device: DeviceWithId = {
+    deviceId: response.Item.SK as string,
+    ...(response.Item as Device),
+  };
+  return device;
 };
 
 export const listDevices = async (): Promise<DeviceWithId[]> => {
-  const command = new ScanCommand({
+  const command = new QueryCommand({
     TableName: process.env.DYNAMODB_TABLE,
-    FilterExpression: "SK = :sk",
-    ExpressionAttributeValues: { ":sk": "device" },
+    KeyConditionExpression: "PK = :pk",
+    ExpressionAttributeValues: { ":pk": DEVICES_PK },
   });
   const response = await client.send(command);
-  return (response.Items || []).map((item) => ({
-    deviceId: item.PK as string,
-    type: item.type,
-    capabilities: item.capabilities,
-    seq: item.seq,
-    expires: item.expires,
-  })) as DeviceWithId[];
+  const devices: DeviceWithId[] = (response.Items ?? []).map(
+    (item): DeviceWithId => ({
+      deviceId: item.SK as string,
+      type: item.type,
+      protocolVersion: item.protocolVersion,
+      smsn: item.smsn,
+      capabilities: item.capabilities ?? [],
+      state: item.state ?? {},
+      seq: item.seq ?? 0,
+      expires: item.expires,
+    }),
+  );
+  return devices;
 };
 
 export const createDevice = async (
   deviceId: string,
   device: Omit<Device, "expires">,
 ): Promise<void> => {
+  const item: Device = {
+    type: device.type,
+    protocolVersion: device.protocolVersion,
+    smsn: device.smsn,
+    capabilities: device.capabilities,
+    state: device.state,
+    seq: device.seq,
+    expires: newExpiresTimestamp(),
+  };
   const command = new PutCommand({
     TableName: process.env.DYNAMODB_TABLE,
     Item: {
-      PK: deviceId,
-      SK: "device",
-      type: device.type,
-      capabilities: device.capabilities,
-      seq: device.seq,
-      expires: newExpiresTimestamp(),
+      PK: DEVICES_PK,
+      SK: deviceId,
+      ...item,
     },
+  });
+  await client.send(command);
+};
+
+export const updateDeviceCapabilities = async (
+  deviceId: string,
+  capabilities: Capability[],
+): Promise<void> => {
+  const command = new UpdateCommand({
+    TableName: process.env.DYNAMODB_TABLE,
+    Key: { PK: DEVICES_PK, SK: deviceId },
+    UpdateExpression: "SET capabilities = :caps, expires = :exp",
+    ExpressionAttributeValues: {
+      ":caps": capabilities,
+      ":exp": newExpiresTimestamp(),
+    },
+  });
+  await client.send(command);
+};
+
+export const updateDeviceState = async (
+  deviceId: string,
+  entries: { key: string; value: string }[],
+): Promise<void> => {
+  if (entries.length === 0) return;
+
+  const setExpressions = entries.map((_, i) => `state.#k${i} = :v${i}`);
+  setExpressions.push("expires = :exp");
+
+  const names: Record<string, string> = {};
+  const values: Record<string, unknown> = { ":exp": newExpiresTimestamp() };
+  for (const [i, entry] of entries.entries()) {
+    names[`#k${i}`] = entry.key;
+    values[`:v${i}`] = entry.value;
+  }
+
+  const command = new UpdateCommand({
+    TableName: process.env.DYNAMODB_TABLE,
+    Key: { PK: DEVICES_PK, SK: deviceId },
+    UpdateExpression: `SET ${setExpressions.join(", ")}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
+  });
+  await client.send(command);
+};
+
+export const nextDeviceSeq = async (deviceId: string): Promise<number> => {
+  const command = new UpdateCommand({
+    TableName: process.env.DYNAMODB_TABLE,
+    Key: { PK: DEVICES_PK, SK: deviceId },
+    UpdateExpression: "ADD #seq :one SET #exp = :exp",
+    ExpressionAttributeValues: { ":one": 1, ":exp": newExpiresTimestamp() },
+    ExpressionAttributeNames: { "#seq": "seq", "#exp": "expires" },
+    ReturnValues: "UPDATED_NEW",
+  });
+  const response = await client.send(command);
+  if (!response.Attributes?.seq) {
+    throw new Error("Failed to get next device seq");
+  }
+  const nextSeq =
+    typeof response.Attributes.seq === "number"
+      ? response.Attributes.seq
+      : parseInt(response.Attributes.seq);
+  return nextSeq;
+};
+
+export const refreshDeviceTtl = async (deviceId: string): Promise<void> => {
+  const command = new UpdateCommand({
+    TableName: process.env.DYNAMODB_TABLE,
+    Key: { PK: DEVICES_PK, SK: deviceId },
+    UpdateExpression: "SET expires = :exp",
+    ExpressionAttributeValues: { ":exp": newExpiresTimestamp() },
   });
   await client.send(command);
 };

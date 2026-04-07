@@ -22,4 +22,10 @@ export default defineConfig([
   },
   globalIgnores(["**/dist/**", "**/coverage/**"]),
   eslintConfigPrettier,
+
+  {
+    rules: {
+      "no-control-regex": "off",
+    },
+  },
 ]);

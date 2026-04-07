@@ -38,8 +38,7 @@ const handleGetDevice = async (
   if (!device) {
     return jsonResponse(404, { error: "Device not found" });
   }
-
-  return jsonResponse(200, { deviceId, ...device });
+  return jsonResponse(200, device);
 };
 
 const handleOptions: RouteHandler = async () => ({
