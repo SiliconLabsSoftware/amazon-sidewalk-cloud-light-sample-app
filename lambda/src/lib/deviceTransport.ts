@@ -24,8 +24,7 @@ export abstract class DeviceTransport {
 
 export class MqttDeviceTransport extends DeviceTransport {
   decodeMessage(message: string): string {
-    const decoded = Buffer.from(message, "base64").toString("ascii");
-    return normalizeSerialInput(decoded);
+    return normalizeSerialInput(message);
   }
 
   async sendPacket(deviceId: string, packet: string): Promise<void> {
