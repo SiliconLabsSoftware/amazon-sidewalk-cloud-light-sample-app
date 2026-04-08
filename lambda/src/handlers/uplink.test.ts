@@ -38,7 +38,12 @@ jest.unstable_mockModule("@aws-sdk/client-apigatewaymanagementapi", () => ({
 }));
 
 const mockGetDevice = jest.fn<(id: string) => Promise<DeviceWithId | undefined>>();
-const mockCreateDevice = jest.fn<(id: string, d: Omit<Device, "expires">) => Promise<void>>();
+const mockCreateDevice = jest.fn<
+  (
+    id: string,
+    d: Pick<DeviceWithId, "type" | "protocolVersion" | "smsn">,
+  ) => Promise<DeviceWithId>
+>();
 const mockRefreshDeviceTtl = jest.fn<(id: string) => Promise<void>>();
 const mockUpdateDeviceCapabilities =
   jest.fn<(id: string, caps: Device["capabilities"]) => Promise<void>>();
@@ -62,9 +67,9 @@ jest.unstable_mockModule("../database/connection.ts", () => ({
 
 const { handler } = await import("./uplink.ts");
 
-/** MQTT uplink passes base64(utf8(payload)); see MqttDeviceTransport.decodeMessage */
+/** MQTT rule: `SELECT data, clientId()` — `data` is the JSON string field (plain text). */
 function mqttEvent(data: string, clientId = "cl1"): SimulatedDeviceUplinkMessage {
-  return { clientId, data: Buffer.from(data, "utf8").toString("base64") };
+  return { clientId, data };
 }
 
 /**
@@ -100,13 +105,15 @@ beforeEach(() => {
 describe("uplink handler", () => {
   describe("pairing (MQTT)", () => {
     it("creates device and sends downlink url + ready", async () => {
-      mockCreateDevice.mockResolvedValueOnce(undefined);
-      mockGetDevice.mockResolvedValueOnce({
-        ...mockDevice,
+      mockCreateDevice.mockResolvedValueOnce({
         deviceId: "cl1",
+        type: "mqtt",
+        protocolVersion: "v1",
+        smsn: "TESTSMSN",
         capabilities: [],
         state: {},
         seq: 0,
+        expires: 9999999999,
       });
 
       const result = await handler(mqttEvent("$v1+cloud_light#TESTSMSN"));
@@ -126,14 +133,15 @@ describe("uplink handler", () => {
 
   describe("pairing (Sidewalk)", () => {
     it("decodes base64 and creates device", async () => {
-      mockCreateDevice.mockResolvedValueOnce(undefined);
-      mockGetDevice.mockResolvedValueOnce({
-        ...mockDevice,
+      mockCreateDevice.mockResolvedValueOnce({
         deviceId: "sw-1234",
         type: "sidewalk",
+        protocolVersion: "v1",
+        smsn: "SW_SMSN",
         capabilities: [],
         state: {},
         seq: 0,
+        expires: 9999999999,
       });
 
       const result = await handler(sidewalkEvent("$v1+cloud_light#SW_SMSN"));
@@ -162,6 +170,23 @@ describe("uplink handler", () => {
       expect(result).toBe("Success");
       expect(mockUpdateDeviceCapabilities).toHaveBeenCalledWith("cl1", [
         { key: "temp", mode: "s", type: "i", display: "c", name: "Temperature" },
+      ]);
+    });
+
+    it("merges with existing capabilities when the device sends one | per message", async () => {
+      const withButton: DeviceWithId = {
+        ...mockDevice,
+        capabilities: [{ key: "button", mode: "s", type: "b", display: "v", name: "Button" }],
+      };
+      mockGetDevice.mockResolvedValueOnce(withButton);
+      mockUpdateDeviceCapabilities.mockResolvedValueOnce(undefined);
+
+      const result = await handler(mqttEvent("|led0+abv+WSTK LED"));
+
+      expect(result).toBe("Success");
+      expect(mockUpdateDeviceCapabilities).toHaveBeenCalledWith("cl1", [
+        { key: "button", mode: "s", type: "b", display: "v", name: "Button" },
+        { key: "led0", mode: "a", type: "b", display: "v", name: "WSTK LED" },
       ]);
     });
   });

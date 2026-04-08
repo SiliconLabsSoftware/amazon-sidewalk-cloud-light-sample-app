@@ -1,4 +1,4 @@
-import type { Device, DeviceWithId } from "../database/databaseTypes.ts";
+import type { Capability, Device, DeviceWithId } from "../database/databaseTypes.ts";
 import type { SidewalkUplinkMessage, SimulatedDeviceUplinkMessage } from "./types.ts";
 import {
   createDevice,
@@ -90,23 +90,15 @@ async function handlePairing(
   parsed: { version: string; appId: string; smsn?: string },
   transport: DeviceTransport,
 ): Promise<void> {
-  const device: Device = {
+  const createdDevice = await createDevice(deviceId, {
     type: uplinkType,
     protocolVersion: parsed.version,
     smsn: parsed.smsn,
-    capabilities: [],
-    state: {},
-    seq: 0,
-    expires: 0,
-  };
-
-  await createDevice(deviceId, device);
+  });
 
   const smsn = parsed.smsn ?? deviceId;
   const baseUrl = process.env.BASE_URL!;
   const password = process.env.FRONTEND_PASSWORD!;
-
-  const createdDevice = (await getDevice(deviceId))!;
 
   const urlMsg = new MagicUrlMessage({ baseUrl, password, smsn });
   await transport.sendPacket(deviceId, urlMsg.toString());
@@ -116,14 +108,29 @@ async function handlePairing(
   await broadcastToClients(wsMessage);
 }
 
+function mergeCapabilities(existing: Capability[], incoming: Capability[]): Capability[] {
+  const byKey = new Map<string, Capability>();
+  const order: string[] = [];
+  for (const c of existing) {
+    if (!byKey.has(c.key)) order.push(c.key);
+    byKey.set(c.key, c);
+  }
+  for (const c of incoming) {
+    if (!byKey.has(c.key)) order.push(c.key);
+    byKey.set(c.key, c);
+  }
+  return order.map((key) => byKey.get(key)).filter((c) => c !== undefined);
+}
+
 async function handleCapability(
   deviceId: string,
   device: DeviceWithId,
   capabilities: Device["capabilities"],
 ): Promise<void> {
-  await updateDeviceCapabilities(deviceId, capabilities);
+  const merged = mergeCapabilities(device.capabilities, capabilities);
+  await updateDeviceCapabilities(deviceId, merged);
 
-  const updated: DeviceWithId = { ...device, capabilities };
+  const updated: DeviceWithId = { ...device, capabilities: merged };
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
   await broadcastToClients(wsMessage);
 }

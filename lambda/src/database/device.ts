@@ -14,7 +14,13 @@ export const getDevice = async (deviceId: string): Promise<DeviceWithId | undefi
   if (!response.Item) return undefined;
   const device: DeviceWithId = {
     deviceId: response.Item.SK as string,
-    ...(response.Item as Device),
+    type: response.Item.type as "sidewalk" | "mqtt",
+    protocolVersion: response.Item.protocolVersion as string,
+    smsn: response.Item.smsn as string | undefined,
+    capabilities: response.Item.capabilities as Capability[],
+    state: response.Item.state as Record<string, string>,
+    seq: response.Item.seq as number,
+    expires: response.Item.expires as number,
   };
   return device;
 };
@@ -43,15 +49,15 @@ export const listDevices = async (): Promise<DeviceWithId[]> => {
 
 export const createDevice = async (
   deviceId: string,
-  device: Omit<Device, "expires">,
-): Promise<void> => {
+  device: Pick<DeviceWithId, "type" | "protocolVersion" | "smsn">,
+): Promise<DeviceWithId> => {
   const item: Device = {
     type: device.type,
     protocolVersion: device.protocolVersion,
     smsn: device.smsn,
-    capabilities: device.capabilities,
-    state: device.state,
-    seq: device.seq,
+    capabilities: [],
+    state: {},
+    seq: 0,
     expires: newExpiresTimestamp(),
   };
   const command = new PutCommand({
@@ -61,8 +67,20 @@ export const createDevice = async (
       SK: deviceId,
       ...item,
     },
+    ReturnValues: "ALL_NEW",
   });
-  await client.send(command);
+  const response = await client.send(command);
+  const createdDevice: DeviceWithId = {
+    deviceId: deviceId,
+    type: response.Attributes?.type as "sidewalk" | "mqtt",
+    protocolVersion: response.Attributes?.protocolVersion as string,
+    smsn: response.Attributes?.smsn as string | undefined,
+    capabilities: response.Attributes?.capabilities as Capability[],
+    state: response.Attributes?.state as Record<string, string>,
+    seq: response.Attributes?.seq as number,
+    expires: response.Attributes?.expires as number,
+  };
+  return createdDevice;
 };
 
 export const updateDeviceCapabilities = async (
