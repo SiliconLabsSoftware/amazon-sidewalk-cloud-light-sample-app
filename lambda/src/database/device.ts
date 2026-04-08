@@ -67,18 +67,11 @@ export const createDevice = async (
       SK: deviceId,
       ...item,
     },
-    ReturnValues: "ALL_NEW",
   });
-  const response = await client.send(command);
+  await client.send(command);
   const createdDevice: DeviceWithId = {
     deviceId: deviceId,
-    type: response.Attributes?.type as "sidewalk" | "mqtt",
-    protocolVersion: response.Attributes?.protocolVersion as string,
-    smsn: response.Attributes?.smsn as string | undefined,
-    capabilities: response.Attributes?.capabilities as Capability[],
-    state: response.Attributes?.state as Record<string, string>,
-    seq: response.Attributes?.seq as number,
-    expires: response.Attributes?.expires as number,
+    ...item,
   };
   return createdDevice;
 };
