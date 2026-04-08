@@ -107,10 +107,14 @@ jobs:
           echo "::add-mask::${{ env.DEV_APP_AWS_ACCOUNT_ID }}"
 
       - name: Build deployer image
-        shell: bash
-        run: |
-          set -euo pipefail
-          docker build -t "cloud-light:dev-${{ github.sha }}" .
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          load: true
+          tags: cloud-light:dev-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Deploy (run container)
         shell: bash
