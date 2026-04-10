@@ -6,9 +6,12 @@ import CardPanel from "@/components/CardPanel.vue";
 const deviceStore = useDeviceStore();
 const { devices } = storeToRefs(deviceStore);
 
-function refresh() {
-  // TODO: Implement refresh logic from store
-  console.log("Refreshing devices...");
+async function refresh() {
+  try {
+    await deviceStore.refreshDevices();
+  } catch (error) {
+    console.error("Failed to refresh devices:", error);
+  }
 }
 </script>
 
@@ -27,11 +30,11 @@ function refresh() {
 
     <RouterLink
       v-for="device in devices"
-      :key="device"
-      :to="{ name: 'device', params: { deviceId: device } }"
+      :key="device.deviceId"
+      :to="{ name: 'device', params: { deviceId: device.deviceId } }"
     >
       <CardPanel class="mb-4 p-4 hover:bg-gray-50">
-        {{ device }}
+        {{ device.deviceId }}
       </CardPanel>
     </RouterLink>
   </div>

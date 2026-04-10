@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
-import { createHttpApi } from "@/api/http";
-import { createWebSocketApi } from "@/api/websocket";
+import { createHttpApi, HttpApi } from "@/api/http";
+import { createWebSocketApi, WebSocketApi } from "@/api/websocket";
 
 export const useApplicationStore = defineStore("application", () => {
   const initialize = async () => {
@@ -15,6 +15,10 @@ export const useApplicationStore = defineStore("application", () => {
       }
     }
   };
+
+  /* APIs */
+  const httpApi = ref<HttpApi | null>(null);
+  const websocketApi = ref<WebSocketApi | null>(null);
 
   /* Password & Auth */
   const isAuthenticated = ref<boolean>(false);
@@ -33,22 +37,24 @@ export const useApplicationStore = defineStore("application", () => {
     localStorage.removeItem("cloud_light_password");
   };
   const authenticate = async (password: string) => {
-    const httpApi = createHttpApi(password);
-    const websocketApi = createWebSocketApi(password);
-    websocketApi.onMessage((message) => {
+    const newHttpApi = createHttpApi(password);
+    const newWebsocketApi = createWebSocketApi(password);
+    newWebsocketApi.onMessage((message) => {
       console.log("Message received:", message);
     });
-    websocketApi.onStateChange((state) => {
+    newWebsocketApi.onStateChange((state) => {
       console.log("State changed:", state);
     });
-    websocketApi.onError((error) => {
+    newWebsocketApi.onError((error) => {
       console.error("Error:", error);
     });
     isAuthenticating.value = true;
     try {
-      await httpApi.getDevices();
-      websocketApi.connect();
+      await newHttpApi.getDevices();
+      newWebsocketApi.connect();
       isAuthenticated.value = true;
+      httpApi.value = newHttpApi;
+      websocketApi.value = newWebsocketApi;
       setPassword(password);
     } catch (error) {
       isAuthenticated.value = false;
@@ -71,5 +77,7 @@ export const useApplicationStore = defineStore("application", () => {
     authenticate,
     isAuthenticating,
     authErrorMessage,
+    httpApi,
+    websocketApi,
   };
 });

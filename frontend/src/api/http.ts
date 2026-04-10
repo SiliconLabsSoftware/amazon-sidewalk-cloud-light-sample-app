@@ -2,27 +2,19 @@ const REST_URL = import.meta.env.VITE_REST_URL as string;
 
 /* Types */
 
-export interface Device {
-  deviceId: string;
-  type: "sidewalk" | "mqtt";
-  capabilities: string[];
-  seq: number;
-  expires: number;
-}
+import type { Device } from "./apiTypes.ts";
 
-export interface DevicesResponse {
+interface HttpDevicesResponse {
   devices: Device[];
 }
 
-export interface DeviceResponse extends Device {}
-
-export interface ApiError {
+interface HttpApiError {
   error: string;
 }
 
 /* Helpers */
 
-function getAuthHeader(password: string): HeadersInit {
+function makeHeaders(password: string): HeadersInit {
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${password}`,
@@ -31,7 +23,7 @@ function getAuthHeader(password: string): HeadersInit {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const errorData = (await response.json()) as ApiError;
+    const errorData = (await response.json()) as HttpApiError;
     throw new Error(errorData.error || `HTTP error: ${response.status}`);
   }
   return response.json() as Promise<T>;
@@ -47,10 +39,10 @@ async function handleResponse<T>(response: Response): Promise<T> {
 export async function getDevices(password: string): Promise<Device[]> {
   const response = await fetch(`${REST_URL}/devices`, {
     method: "GET",
-    headers: getAuthHeader(password),
+    headers: makeHeaders(password),
   });
 
-  const data = await handleResponse<DevicesResponse>(response);
+  const data = await handleResponse<HttpDevicesResponse>(response);
   return data.devices;
 }
 
@@ -63,7 +55,7 @@ export async function getDevices(password: string): Promise<Device[]> {
 export async function getDevice(password: string, deviceId: string): Promise<Device> {
   const response = await fetch(`${REST_URL}/devices/${encodeURIComponent(deviceId)}`, {
     method: "GET",
-    headers: getAuthHeader(password),
+    headers: makeHeaders(password),
   });
 
   return handleResponse<Device>(response);

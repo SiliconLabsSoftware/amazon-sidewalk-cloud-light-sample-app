@@ -15,7 +15,7 @@ const deviceStore = useDeviceStore();
 const deviceId = route.params.deviceId as string;
 
 // Redirect to 404 if device not found in store
-if (!deviceStore.devices.includes(deviceId)) {
+if (!deviceStore.getDevice(deviceId)) {
   router.replace({ name: "not-found" });
 }
 </script>
