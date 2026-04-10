@@ -46,9 +46,9 @@ const mockCreateDevice = jest.fn<
 >();
 const mockRefreshDeviceTtl = jest.fn<(id: string) => Promise<void>>();
 const mockUpdateDeviceCapabilities =
-  jest.fn<(id: string, caps: Device["capabilities"]) => Promise<void>>();
+  jest.fn<(id: string, caps: Device["capabilities"]) => Promise<Device>>();
 const mockUpdateDeviceState =
-  jest.fn<(id: string, entries: { key: string; value: string }[]) => Promise<void>>();
+  jest.fn<(id: string, entries: { key: string; value: string }[]) => Promise<Device>>();
 const mockNextDeviceSeq = jest.fn<(id: string) => Promise<number>>().mockResolvedValue(1);
 
 jest.unstable_mockModule("../database/device.ts", () => ({
@@ -163,7 +163,7 @@ describe("uplink handler", () => {
     it("updates device capabilities and broadcasts", async () => {
       mockGetDevice.mockResolvedValueOnce(mockDevice);
       mockRefreshDeviceTtl.mockResolvedValueOnce(undefined);
-      mockUpdateDeviceCapabilities.mockResolvedValueOnce(undefined);
+      mockUpdateDeviceCapabilities.mockResolvedValueOnce(mockDevice);
 
       const result = await handler(mqttEvent("|temp+sic+Temperature"));
 
@@ -178,8 +178,15 @@ describe("uplink handler", () => {
         ...mockDevice,
         capabilities: [{ key: "button", mode: "s", type: "b", display: "v", name: "Button" }],
       };
+      const afterUpdate: Device = {
+        ...mockDevice,
+        capabilities: [
+          { key: "button", mode: "s", type: "b", display: "v", name: "Button" },
+          { key: "led0", mode: "a", type: "b", display: "v", name: "WSTK LED" },
+        ],
+      };
       mockGetDevice.mockResolvedValueOnce(withButton);
-      mockUpdateDeviceCapabilities.mockResolvedValueOnce(undefined);
+      mockUpdateDeviceCapabilities.mockResolvedValueOnce(afterUpdate);
 
       const result = await handler(mqttEvent("|led0+abv+WSTK LED"));
 
@@ -194,7 +201,7 @@ describe("uplink handler", () => {
     it("updates state for registered capability keys only", async () => {
       mockGetDevice.mockResolvedValueOnce(mockDevice);
       mockRefreshDeviceTtl.mockResolvedValueOnce(undefined);
-      mockUpdateDeviceState.mockResolvedValueOnce(undefined);
+      mockUpdateDeviceState.mockResolvedValueOnce({ ...mockDevice, state: { temp: "23" } });
 
       const result = await handler(mqttEvent(":temp=23:unknown=99"));
 

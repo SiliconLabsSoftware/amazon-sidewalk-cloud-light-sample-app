@@ -65,7 +65,7 @@ export const handler = async (
 
   switch (parsed.verb) {
     case "capability":
-      await handleCapability(deviceId, device, parsed.capabilities);
+      await handleCapability(deviceId, parsed.capabilities);
       break;
     case "state":
       await handleState(deviceId, device, parsed.entries);
@@ -110,16 +110,9 @@ async function handlePairing(
 
 async function handleCapability(
   deviceId: string,
-  device: Device,
   capabilities: Device["capabilities"],
 ): Promise<void> {
-  await updateDeviceCapabilities(deviceId, capabilities);
-
-  const capMap = new Map(device.capabilities.map((c) => [c.key, c]));
-  for (const c of capabilities) capMap.set(c.key, c);
-  const updatedCaps = [...capMap.values()].sort((a, b) => a.name.localeCompare(b.name));
-
-  const updated: Device = { ...device, capabilities: updatedCaps };
+  const updated = await updateDeviceCapabilities(deviceId, capabilities);
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
   await broadcastToClients(wsMessage);
 }
@@ -137,14 +130,7 @@ async function handleState(
     return;
   }
 
-  await updateDeviceState(deviceId, filtered);
-
-  const updatedState = { ...device.state };
-  for (const entry of filtered) {
-    updatedState[entry.key] = entry.value;
-  }
-
-  const updated: Device = { ...device, state: updatedState };
+  const updated = await updateDeviceState(deviceId, filtered);
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
   await broadcastToClients(wsMessage);
 }

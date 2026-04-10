@@ -5,10 +5,31 @@ import { newExpiresTimestamp } from "./utils.ts";
 
 const DEVICES_PK = "devices";
 
+// ---------------------------------------------------------------------------
+// Helper Functions
+// ---------------------------------------------------------------------------
+
 function capabilitiesMapToArray(stored: DeviceRecord["capabilities"] | undefined): Capability[] {
   if (!stored) return [];
   return Object.values(stored).sort((a, b) => a.name.localeCompare(b.name));
 }
+
+function itemToDevice(item: Record<string, unknown>): Device {
+  return {
+    deviceId: item.SK as string,
+    type: item.type as "sidewalk" | "mqtt",
+    protocolVersion: item.protocolVersion as string,
+    smsn: item.smsn as string | undefined,
+    capabilities: capabilitiesMapToArray(item.capabilities as DeviceRecord["capabilities"]),
+    state: item.state as Record<string, string>,
+    seq: item.seq as number,
+    expires: item.expires as number,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// CRUD Operations
+// ---------------------------------------------------------------------------
 
 export const getDevice = async (deviceId: string): Promise<Device | undefined> => {
   const command = new GetCommand({
@@ -17,17 +38,7 @@ export const getDevice = async (deviceId: string): Promise<Device | undefined> =
   });
   const response = await client.send(command);
   if (!response.Item) return undefined;
-  const device: Device = {
-    deviceId: response.Item.SK as string,
-    type: response.Item.type as "sidewalk" | "mqtt",
-    protocolVersion: response.Item.protocolVersion as string,
-    smsn: response.Item.smsn as string | undefined,
-    capabilities: capabilitiesMapToArray(response.Item.capabilities),
-    state: response.Item.state as Record<string, string>,
-    seq: response.Item.seq as number,
-    expires: response.Item.expires as number,
-  };
-  return device;
+  return itemToDevice(response.Item);
 };
 
 export const listDevices = async (): Promise<Device[]> => {
@@ -37,19 +48,7 @@ export const listDevices = async (): Promise<Device[]> => {
     ExpressionAttributeValues: { ":pk": DEVICES_PK },
   });
   const response = await client.send(command);
-  const devices: Device[] = (response.Items ?? []).map(
-    (item): Device => ({
-      deviceId: item.SK as string,
-      type: item.type,
-      protocolVersion: item.protocolVersion,
-      smsn: item.smsn,
-      capabilities: capabilitiesMapToArray(item.capabilities),
-      state: item.state ?? {},
-      seq: item.seq ?? 0,
-      expires: item.expires,
-    }),
-  );
-  return devices;
+  return (response.Items ?? []).map(itemToDevice);
 };
 
 export const createDevice = async (
@@ -85,9 +84,7 @@ export const createDevice = async (
 export const updateDeviceCapabilities = async (
   deviceId: string,
   capabilities: Capability[],
-): Promise<void> => {
-  if (capabilities.length === 0) return;
-
+): Promise<Device> => {
   const setExpressions = capabilities.map((_, i) => `capabilities.#k${i} = :v${i}`);
   setExpressions.push("expires = :exp");
 
@@ -104,16 +101,16 @@ export const updateDeviceCapabilities = async (
     UpdateExpression: `SET ${setExpressions.join(", ")}`,
     ExpressionAttributeNames: names,
     ExpressionAttributeValues: values,
+    ReturnValues: "ALL_NEW",
   });
-  await client.send(command);
+  const response = await client.send(command);
+  return itemToDevice(response.Attributes!);
 };
 
 export const updateDeviceState = async (
   deviceId: string,
   entries: { key: string; value: string }[],
-): Promise<void> => {
-  if (entries.length === 0) return;
-
+): Promise<Device> => {
   const setExpressions = entries.map((_, i) => `state.#k${i} = :v${i}`);
   setExpressions.push("expires = :exp");
 
@@ -130,8 +127,10 @@ export const updateDeviceState = async (
     UpdateExpression: `SET ${setExpressions.join(", ")}`,
     ExpressionAttributeNames: names,
     ExpressionAttributeValues: values,
+    ReturnValues: "ALL_NEW",
   });
-  await client.send(command);
+  const response = await client.send(command);
+  return itemToDevice(response.Attributes!);
 };
 
 export const nextDeviceSeq = async (deviceId: string): Promise<number> => {
