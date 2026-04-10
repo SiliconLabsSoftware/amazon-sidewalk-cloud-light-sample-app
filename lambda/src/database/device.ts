@@ -111,10 +111,10 @@ export const updateDeviceState = async (
   deviceId: string,
   entries: { key: string; value: string }[],
 ): Promise<Device> => {
-  const setExpressions = entries.map((_, i) => `state.#k${i} = :v${i}`);
+  const setExpressions = entries.map((_, i) => `#state.#k${i} = :v${i}`);
   setExpressions.push("expires = :exp");
 
-  const names: Record<string, string> = {};
+  const names: Record<string, string> = { "#state": "state" };
   const values: Record<string, unknown> = { ":exp": newExpiresTimestamp() };
   for (const [i, entry] of entries.entries()) {
     names[`#k${i}`] = entry.key;
