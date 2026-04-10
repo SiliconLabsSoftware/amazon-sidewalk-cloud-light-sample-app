@@ -13,12 +13,40 @@ interface WebSocketConnectEvent extends APIGatewayProxyWebsocketEventV2 {
   queryStringParameters?: APIGatewayProxyEventQueryStringParameters;
 }
 
+export const handler = async (
+  event: APIGatewayProxyWebsocketEventV2,
+): Promise<APIGatewayProxyResultV2> => {
+  console.log("WebSocket event:", JSON.stringify(event, null, 2));
+
+  const routeKey = event.requestContext.routeKey;
+
+  try {
+    switch (routeKey) {
+      case "$connect":
+        return await handleConnect(event);
+      case "$disconnect":
+        return await handleDisconnect(event);
+      case "$default":
+        return await handleDefault(event);
+      default:
+        console.log(`Unknown route: ${routeKey}`);
+        return { statusCode: 400, body: "Unknown route" };
+    }
+  } catch (error) {
+    console.error(`Error handling ${routeKey}:`, error);
+    return { statusCode: 500, body: "Internal server error" };
+  }
+};
+
 const handleConnect = async (event: WebSocketConnectEvent): Promise<APIGatewayProxyResultV2> => {
   const connectionId = event.requestContext.connectionId;
 
   if (
     !validatePassword(
-      event.queryStringParameters?.authorization || event.queryStringParameters?.Authorization,
+      event.queryStringParameters?.authorization ||
+        event.queryStringParameters?.Authorization ||
+        event.headers?.authorization ||
+        event.headers?.Authorization,
     )
   ) {
     console.log(`Connection rejected - invalid password`);
@@ -51,29 +79,4 @@ const handleDefault = async (
   // TODO: Parse message and handle commands (e.g., send downlink to device)
 
   return { statusCode: 200, body: "Message received" };
-};
-
-export const handler = async (
-  event: APIGatewayProxyWebsocketEventV2,
-): Promise<APIGatewayProxyResultV2> => {
-  console.log("WebSocket event:", JSON.stringify(event, null, 2));
-
-  const routeKey = event.requestContext.routeKey;
-
-  try {
-    switch (routeKey) {
-      case "$connect":
-        return await handleConnect(event);
-      case "$disconnect":
-        return await handleDisconnect(event);
-      case "$default":
-        return await handleDefault(event);
-      default:
-        console.log(`Unknown route: ${routeKey}`);
-        return { statusCode: 400, body: "Unknown route" };
-    }
-  } catch (error) {
-    console.error(`Error handling ${routeKey}:`, error);
-    return { statusCode: 500, body: "Internal server error" };
-  }
 };
