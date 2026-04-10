@@ -173,7 +173,7 @@ describe("uplink handler", () => {
       ]);
     });
 
-    it("merges with existing capabilities when the device sends one | per message", async () => {
+    it("stores only incoming capabilities (merge handled by DynamoDB map)", async () => {
       const withButton: Device = {
         ...mockDevice,
         capabilities: [{ key: "button", mode: "s", type: "b", display: "v", name: "Button" }],
@@ -185,7 +185,6 @@ describe("uplink handler", () => {
 
       expect(result).toBe("Success");
       expect(mockUpdateDeviceCapabilities).toHaveBeenCalledWith("cl1", [
-        { key: "button", mode: "s", type: "b", display: "v", name: "Button" },
         { key: "led0", mode: "a", type: "b", display: "v", name: "WSTK LED" },
       ]);
     });

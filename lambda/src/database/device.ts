@@ -5,6 +5,11 @@ import { newExpiresTimestamp } from "./utils.ts";
 
 const DEVICES_PK = "devices";
 
+function capabilitiesMapToArray(stored: DeviceRecord["capabilities"] | undefined): Capability[] {
+  if (!stored) return [];
+  return Object.values(stored).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export const getDevice = async (deviceId: string): Promise<Device | undefined> => {
   const command = new GetCommand({
     TableName: process.env.DYNAMODB_TABLE,
@@ -17,7 +22,7 @@ export const getDevice = async (deviceId: string): Promise<Device | undefined> =
     type: response.Item.type as "sidewalk" | "mqtt",
     protocolVersion: response.Item.protocolVersion as string,
     smsn: response.Item.smsn as string | undefined,
-    capabilities: response.Item.capabilities as Capability[],
+    capabilities: capabilitiesMapToArray(response.Item.capabilities),
     state: response.Item.state as Record<string, string>,
     seq: response.Item.seq as number,
     expires: response.Item.expires as number,
@@ -38,7 +43,7 @@ export const listDevices = async (): Promise<Device[]> => {
       type: item.type,
       protocolVersion: item.protocolVersion,
       smsn: item.smsn,
-      capabilities: item.capabilities ?? [],
+      capabilities: capabilitiesMapToArray(item.capabilities),
       state: item.state ?? {},
       seq: item.seq ?? 0,
       expires: item.expires,
@@ -55,7 +60,7 @@ export const createDevice = async (
     type: device.type,
     protocolVersion: device.protocolVersion,
     smsn: device.smsn,
-    capabilities: [],
+    capabilities: {},
     state: {},
     seq: 0,
     expires: newExpiresTimestamp(),
@@ -72,6 +77,7 @@ export const createDevice = async (
   const createdDevice: Device = {
     deviceId: deviceId,
     ...item,
+    capabilities: [],
   };
   return createdDevice;
 };
@@ -80,14 +86,24 @@ export const updateDeviceCapabilities = async (
   deviceId: string,
   capabilities: Capability[],
 ): Promise<void> => {
+  if (capabilities.length === 0) return;
+
+  const setExpressions = capabilities.map((_, i) => `capabilities.#k${i} = :v${i}`);
+  setExpressions.push("expires = :exp");
+
+  const names: Record<string, string> = {};
+  const values: Record<string, unknown> = { ":exp": newExpiresTimestamp() };
+  for (const [i, cap] of capabilities.entries()) {
+    names[`#k${i}`] = cap.key;
+    values[`:v${i}`] = cap;
+  }
+
   const command = new UpdateCommand({
     TableName: process.env.DYNAMODB_TABLE,
     Key: { PK: DEVICES_PK, SK: deviceId },
-    UpdateExpression: "SET capabilities = :caps, expires = :exp",
-    ExpressionAttributeValues: {
-      ":caps": capabilities,
-      ":exp": newExpiresTimestamp(),
-    },
+    UpdateExpression: `SET ${setExpressions.join(", ")}`,
+    ExpressionAttributeNames: names,
+    ExpressionAttributeValues: values,
   });
   await client.send(command);
 };

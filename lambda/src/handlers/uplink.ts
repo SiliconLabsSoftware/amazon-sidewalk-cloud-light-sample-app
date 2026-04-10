@@ -1,4 +1,4 @@
-import type { Capability, Device } from "../database/databaseTypes.ts";
+import type { Device } from "../database/databaseTypes.ts";
 import type { SidewalkUplinkMessage, SimulatedDeviceUplinkMessage } from "./types.ts";
 import {
   createDevice,
@@ -108,29 +108,18 @@ async function handlePairing(
   await broadcastToClients(wsMessage);
 }
 
-function mergeCapabilities(existing: Capability[], incoming: Capability[]): Capability[] {
-  const byKey = new Map<string, Capability>();
-  const order: string[] = [];
-  for (const c of existing) {
-    if (!byKey.has(c.key)) order.push(c.key);
-    byKey.set(c.key, c);
-  }
-  for (const c of incoming) {
-    if (!byKey.has(c.key)) order.push(c.key);
-    byKey.set(c.key, c);
-  }
-  return order.map((key) => byKey.get(key)).filter((c) => c !== undefined);
-}
-
 async function handleCapability(
   deviceId: string,
   device: Device,
   capabilities: Device["capabilities"],
 ): Promise<void> {
-  const merged = mergeCapabilities(device.capabilities, capabilities);
-  await updateDeviceCapabilities(deviceId, merged);
+  await updateDeviceCapabilities(deviceId, capabilities);
 
-  const updated: Device = { ...device, capabilities: merged };
+  const capMap = new Map(device.capabilities.map((c) => [c.key, c]));
+  for (const c of capabilities) capMap.set(c.key, c);
+  const updatedCaps = [...capMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+
+  const updated: Device = { ...device, capabilities: updatedCaps };
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
   await broadcastToClients(wsMessage);
 }

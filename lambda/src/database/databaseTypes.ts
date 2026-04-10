@@ -14,13 +14,14 @@ export interface DeviceRecord extends DatabaseEntry {
   type: "sidewalk" | "mqtt";
   protocolVersion: string;
   smsn?: string;
-  capabilities: Capability[];
+  capabilities: Record<string, Capability>;
   state: Record<string, string>;
   seq: number;
 }
 
-export interface Device extends DeviceRecord {
+export interface Device extends Omit<DeviceRecord, "capabilities"> {
   deviceId: string;
+  capabilities: Capability[];
 }
 
 export interface Connection extends DatabaseEntry {
