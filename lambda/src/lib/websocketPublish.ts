@@ -4,7 +4,7 @@ import {
   GoneException,
 } from "@aws-sdk/client-apigatewaymanagementapi";
 import { listConnections, deleteConnection } from "../database/connection.ts";
-import type { WsMessage } from "./websockerTypes.ts";
+import type { WsMessage } from "./websocketTypes.ts";
 
 const apiClient = new ApiGatewayManagementApiClient({
   region: process.env.REGION,

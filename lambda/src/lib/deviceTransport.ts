@@ -1,6 +1,7 @@
 import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-plane";
 import { IoTWirelessClient, SendDataToWirelessDeviceCommand } from "@aws-sdk/client-iot-wireless";
 import { nextDeviceSeq } from "../database/device.ts";
+import type { Device } from "../database/databaseTypes.ts";
 
 const iotDataClient = new IoTDataPlaneClient({
   region: process.env.REGION,
@@ -14,6 +15,10 @@ const iotWirelessClient = new IoTWirelessClient({
 function normalizeSerialInput(message: string): string {
   // remove C-string terminators (NUL) or other control chars
   return message.replace(/[\u0000-\u001F\u007F]/g, "").trim();
+}
+
+export function transportForDevice(deviceType: Device["type"]): DeviceTransport {
+  return deviceType === "mqtt" ? new MqttDeviceTransport() : new WirelessDeviceTransport();
 }
 
 export abstract class DeviceTransport {

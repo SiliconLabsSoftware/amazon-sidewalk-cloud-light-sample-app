@@ -9,13 +9,9 @@ import {
 } from "../database/device.ts";
 import { parseMessage } from "../lib/deviceProtocolParser.ts";
 import { MagicUrlMessage, PongMessage, ReadyMessage } from "../lib/deviceProtocolBuilder.ts";
-import type { WsDeviceUpdateMessage, WsTonkMessage } from "../lib/websockerTypes.ts";
+import type { WsDeviceUpdateMessage, WsTonkMessage } from "../lib/websocketTypes.ts";
 import { broadcastToClients } from "../lib/websocketPublish.ts";
-import {
-  DeviceTransport,
-  MqttDeviceTransport,
-  WirelessDeviceTransport,
-} from "../lib/deviceTransport.ts";
+import { DeviceTransport, transportForDevice } from "../lib/deviceTransport.ts";
 
 export const handler = async (
   event: SidewalkUplinkMessage | SimulatedDeviceUplinkMessage,
@@ -25,23 +21,20 @@ export const handler = async (
   let deviceId: string;
   let rawMessage: string;
   let uplinkType: "sidewalk" | "mqtt";
-  let transport: DeviceTransport;
 
   if ("clientId" in event) {
     uplinkType = "mqtt";
     deviceId = event.clientId;
-    transport = new MqttDeviceTransport();
     rawMessage = event.data;
   } else if ("WirelessDeviceId" in event) {
     uplinkType = "sidewalk";
     deviceId = event.WirelessDeviceId;
-    transport = new WirelessDeviceTransport();
     rawMessage = event.PayloadData;
   } else {
     console.warn("Invalid uplink event — ignoring");
     return "Invalid event";
   }
-
+  const transport: DeviceTransport = transportForDevice(uplinkType);
   const message = transport.decodeMessage(rawMessage);
 
   if (!message || message.trim().length === 0) {
@@ -71,7 +64,7 @@ export const handler = async (
       await handleState(deviceId, device, parsed.entries);
       break;
     case "ping":
-      await handlePing(deviceId, device, parsed.timestamp, transport);
+      await handlePing(deviceId, parsed.timestamp, transport);
       break;
     case "tonk":
       await handleTonk(deviceId, parsed.timestamp);
@@ -137,7 +130,6 @@ async function handleState(
 
 async function handlePing(
   deviceId: string,
-  device: Device,
   timestamp: string,
   transport: DeviceTransport,
 ): Promise<void> {
