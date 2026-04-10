@@ -10,7 +10,7 @@ export interface Capability {
   name: string;
 }
 
-export interface Device extends DatabaseEntry {
+export interface DeviceRecord extends DatabaseEntry {
   type: "sidewalk" | "mqtt";
   protocolVersion: string;
   smsn?: string;
@@ -19,7 +19,7 @@ export interface Device extends DatabaseEntry {
   seq: number;
 }
 
-export interface DeviceWithId extends Device {
+export interface Device extends DeviceRecord {
   deviceId: string;
 }
 

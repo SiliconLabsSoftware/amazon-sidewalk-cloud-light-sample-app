@@ -1,4 +1,4 @@
-import { DeviceWithId } from "../database/databaseTypes.ts";
+import { Device } from "../database/databaseTypes.ts";
 
 type WsMessageType = "device_update" | "tonk";
 
@@ -8,7 +8,7 @@ interface WsMessageBase {
 
 export interface WsDeviceUpdateMessage extends WsMessageBase {
   type: "device_update";
-  device: DeviceWithId;
+  device: Device;
 }
 
 export interface WsTonkMessage extends WsMessageBase {

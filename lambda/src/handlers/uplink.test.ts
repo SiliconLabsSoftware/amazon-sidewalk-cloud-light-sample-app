@@ -1,8 +1,8 @@
 import { jest, describe, it, expect, beforeEach } from "@jest/globals";
-import type { Device, DeviceWithId } from "../database/databaseTypes.ts";
+import type { Device } from "../database/databaseTypes.ts";
 import type { SidewalkUplinkMessage, SimulatedDeviceUplinkMessage } from "./types.ts";
 
-const mockDevice: DeviceWithId = {
+const mockDevice: Device = {
   deviceId: "cl1",
   type: "mqtt",
   protocolVersion: "v1",
@@ -37,12 +37,12 @@ jest.unstable_mockModule("@aws-sdk/client-apigatewaymanagementapi", () => ({
   },
 }));
 
-const mockGetDevice = jest.fn<(id: string) => Promise<DeviceWithId | undefined>>();
+const mockGetDevice = jest.fn<(id: string) => Promise<Device | undefined>>();
 const mockCreateDevice = jest.fn<
   (
     id: string,
-    d: Pick<DeviceWithId, "type" | "protocolVersion" | "smsn">,
-  ) => Promise<DeviceWithId>
+    d: Pick<Device, "type" | "protocolVersion" | "smsn">,
+  ) => Promise<Device>
 >();
 const mockRefreshDeviceTtl = jest.fn<(id: string) => Promise<void>>();
 const mockUpdateDeviceCapabilities =
@@ -174,7 +174,7 @@ describe("uplink handler", () => {
     });
 
     it("merges with existing capabilities when the device sends one | per message", async () => {
-      const withButton: DeviceWithId = {
+      const withButton: Device = {
         ...mockDevice,
         capabilities: [{ key: "button", mode: "s", type: "b", display: "v", name: "Button" }],
       };

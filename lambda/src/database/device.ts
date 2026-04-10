@@ -1,18 +1,18 @@
 import { GetCommand, PutCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import client from "./client.ts";
-import type { Capability, Device, DeviceWithId } from "./databaseTypes.ts";
+import type { Capability, Device, DeviceRecord } from "./databaseTypes.ts";
 import { newExpiresTimestamp } from "./utils.ts";
 
 const DEVICES_PK = "devices";
 
-export const getDevice = async (deviceId: string): Promise<DeviceWithId | undefined> => {
+export const getDevice = async (deviceId: string): Promise<Device | undefined> => {
   const command = new GetCommand({
     TableName: process.env.DYNAMODB_TABLE,
     Key: { PK: DEVICES_PK, SK: deviceId },
   });
   const response = await client.send(command);
   if (!response.Item) return undefined;
-  const device: DeviceWithId = {
+  const device: Device = {
     deviceId: response.Item.SK as string,
     type: response.Item.type as "sidewalk" | "mqtt",
     protocolVersion: response.Item.protocolVersion as string,
@@ -25,15 +25,15 @@ export const getDevice = async (deviceId: string): Promise<DeviceWithId | undefi
   return device;
 };
 
-export const listDevices = async (): Promise<DeviceWithId[]> => {
+export const listDevices = async (): Promise<Device[]> => {
   const command = new QueryCommand({
     TableName: process.env.DYNAMODB_TABLE,
     KeyConditionExpression: "PK = :pk",
     ExpressionAttributeValues: { ":pk": DEVICES_PK },
   });
   const response = await client.send(command);
-  const devices: DeviceWithId[] = (response.Items ?? []).map(
-    (item): DeviceWithId => ({
+  const devices: Device[] = (response.Items ?? []).map(
+    (item): Device => ({
       deviceId: item.SK as string,
       type: item.type,
       protocolVersion: item.protocolVersion,
@@ -49,9 +49,9 @@ export const listDevices = async (): Promise<DeviceWithId[]> => {
 
 export const createDevice = async (
   deviceId: string,
-  device: Pick<DeviceWithId, "type" | "protocolVersion" | "smsn">,
-): Promise<DeviceWithId> => {
-  const item: Device = {
+  device: Pick<Device, "type" | "protocolVersion" | "smsn">,
+): Promise<Device> => {
+  const item: DeviceRecord = {
     type: device.type,
     protocolVersion: device.protocolVersion,
     smsn: device.smsn,
@@ -69,7 +69,7 @@ export const createDevice = async (
     },
   });
   await client.send(command);
-  const createdDevice: DeviceWithId = {
+  const createdDevice: Device = {
     deviceId: deviceId,
     ...item,
   };

@@ -1,4 +1,4 @@
-import type { Capability, Device, DeviceWithId } from "../database/databaseTypes.ts";
+import type { Capability, Device } from "../database/databaseTypes.ts";
 import type { SidewalkUplinkMessage, SimulatedDeviceUplinkMessage } from "./types.ts";
 import {
   createDevice,
@@ -124,20 +124,20 @@ function mergeCapabilities(existing: Capability[], incoming: Capability[]): Capa
 
 async function handleCapability(
   deviceId: string,
-  device: DeviceWithId,
+  device: Device,
   capabilities: Device["capabilities"],
 ): Promise<void> {
   const merged = mergeCapabilities(device.capabilities, capabilities);
   await updateDeviceCapabilities(deviceId, merged);
 
-  const updated: DeviceWithId = { ...device, capabilities: merged };
+  const updated: Device = { ...device, capabilities: merged };
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
   await broadcastToClients(wsMessage);
 }
 
 async function handleState(
   deviceId: string,
-  device: DeviceWithId,
+  device: Device,
   entries: { key: string; value: string }[],
 ): Promise<void> {
   const knownKeys = new Set(device.capabilities.map((c) => c.key));
@@ -155,14 +155,14 @@ async function handleState(
     updatedState[entry.key] = entry.value;
   }
 
-  const updated: DeviceWithId = { ...device, state: updatedState };
+  const updated: Device = { ...device, state: updatedState };
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
   await broadcastToClients(wsMessage);
 }
 
 async function handlePing(
   deviceId: string,
-  device: DeviceWithId,
+  device: Device,
   timestamp: string,
   transport: DeviceTransport,
 ): Promise<void> {
