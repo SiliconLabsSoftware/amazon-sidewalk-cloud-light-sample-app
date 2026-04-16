@@ -1,12 +1,11 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import type { Device, WsDeviceUpdateMessage, WsTonkMessage } from "@/api/apiTypes.ts";
-import mockDevices from "./mockDevices.ts";
 import { useApplicationStore } from "./application.ts";
 
 export const useDeviceStore = defineStore("device", () => {
   const applicationStore = useApplicationStore();
-  const devices = ref<Device[]>(mockDevices);
+  const devices = ref<Device[]>([]);
 
   const refreshDevices = async () => {
     if (!applicationStore.httpApi) {

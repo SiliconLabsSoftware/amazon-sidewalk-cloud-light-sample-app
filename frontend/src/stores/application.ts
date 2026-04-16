@@ -69,7 +69,10 @@ export const useApplicationStore = defineStore("application", () => {
     });
     isAuthenticating.value = true;
     try {
-      await newHttpApi.getDevices();
+      const devices = await newHttpApi.getDevices();
+      if (devices) {
+        deviceStore.devices = devices;
+      }
       newWebsocketApi.connect();
       isAuthenticated.value = true;
       httpApi.value = newHttpApi;
