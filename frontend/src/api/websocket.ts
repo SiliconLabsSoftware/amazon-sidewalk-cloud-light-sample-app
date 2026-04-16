@@ -1,14 +1,12 @@
+import type { WsMessage } from "./apiTypes";
+
 const WSS_URL = import.meta.env.VITE_WSS_URL as string;
 
 /* Types */
 
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
-export interface WebSocketMessage {
-  [key: string]: unknown;
-}
-
-export type MessageHandler = (message: WebSocketMessage) => void;
+export type MessageHandler = (message: WsMessage) => void;
 export type StateChangeHandler = (state: ConnectionState) => void;
 export type ErrorHandler = (error: Event | Error) => void;
 
@@ -76,7 +74,7 @@ export class WebSocketApi {
   /**
    * Send a message to the server
    */
-  send(message: WebSocketMessage): void {
+  send(message: WsMessage): void {
     if (!this.ws || this.state !== "connected") {
       throw new Error("WebSocket is not connected");
     }
@@ -123,7 +121,7 @@ export class WebSocketApi {
 
   private handleMessage(event: MessageEvent): void {
     try {
-      const message = JSON.parse(event.data) as WebSocketMessage;
+      const message = JSON.parse(event.data) as WsMessage;
       this.messageHandlers.forEach((handler) => handler(message));
     } catch {
       console.error("Failed to parse WebSocket message:", event.data);

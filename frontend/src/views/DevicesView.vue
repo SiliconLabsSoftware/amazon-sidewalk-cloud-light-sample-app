@@ -20,12 +20,14 @@ async function refresh() {
     <!-- Header Card -->
     <CardPanel class="mb-4 flex items-center justify-between p-4">
       <span class="text-lg font-semibold">Devices</span>
-      <button
-        @click="refresh"
-        class="rounded-lg bg-sl-blue-500 px-4 py-2 text-white hover:bg-sl-blue-700"
-      >
-        Refresh
-      </button>
+      <div>
+        <button
+          @click="refresh"
+          class="rounded-lg bg-sl-blue-500 px-4 py-2 text-white hover:bg-sl-blue-700"
+        >
+          Refresh
+        </button>
+      </div>
     </CardPanel>
 
     <RouterLink

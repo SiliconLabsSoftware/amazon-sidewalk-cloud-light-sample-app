@@ -1,23 +1,37 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from "vue-router";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
 import { useDeviceStore } from "@/stores/device";
 import CardPanel from "@/components/CardPanel.vue";
-import DeviceState from "@/components/DeviceState.vue";
+import DeviceState from "@/components//states/DeviceState.vue";
 import UplinkPanel from "@/components/UplinkPanel.vue";
 import DownlinkPanel from "@/components/DownlinkPanel.vue";
 import AWSCloud from "@/components/AWSCloud.vue";
 import EmptyItem from "@/components/EmptyItem.vue";
+import { useRoutedDevice } from "@/composables/routedDevice";
 
-const route = useRoute();
 const router = useRouter();
-const deviceStore = useDeviceStore();
-
-const deviceId = route.params.deviceId as string;
+const { device, deviceId } = useRoutedDevice();
 
 // Redirect to 404 if device not found in store
-if (!deviceStore.getDevice(deviceId)) {
+if (!device.value) {
   router.replace({ name: "not-found" });
 }
+
+const deviceStore = useDeviceStore();
+
+const sensorStates = computed(
+  () =>
+    device.value?.capabilities
+      .filter((cap) => cap.mode === "s")
+      .map((cap) => ({ capability: cap, state: device.value?.state[cap.key] ?? undefined })) || [],
+);
+const actuatorStates = computed(
+  () =>
+    device.value?.capabilities
+      .filter((cap) => cap.mode === "a")
+      .map((cap) => ({ capability: cap, state: device.value?.state[cap.key] ?? undefined })) || [],
+);
 </script>
 
 <template>
@@ -38,14 +52,29 @@ if (!deviceStore.getDevice(deviceId)) {
       <div class="grid-col">
         <AWSCloud></AWSCloud>
         <DownlinkPanel>
-          <EmptyItem></EmptyItem>
-          <DeviceState></DeviceState>
+          <EmptyItem v-if="actuatorStates.length === 0" />
+          <DeviceState
+            v-else
+            v-for="(state, index) in actuatorStates"
+            :key="state.capability.key"
+            :showDivider="index < actuatorStates.length - 1"
+            :capability="state.capability"
+            :state="state.state"
+            @set="(value) => deviceStore.setState(deviceId, state.capability.key, value)"
+          />
         </DownlinkPanel>
       </div>
       <div class="grid-col">
         <UplinkPanel>
-          <EmptyItem></EmptyItem>
-          <DeviceState></DeviceState>
+          <EmptyItem v-if="sensorStates.length === 0" />
+          <DeviceState
+            v-else
+            v-for="(state, index) in sensorStates"
+            :key="state.capability.key"
+            :showDivider="index < sensorStates.length - 1"
+            :capability="state.capability"
+            :state="state.state"
+          />
         </UplinkPanel>
       </div>
     </div>

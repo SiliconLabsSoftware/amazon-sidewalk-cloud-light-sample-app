@@ -112,3 +112,68 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 } */
+
+@layer base {
+  body {
+    @apply h-full text-sl-gray-800;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply mb-2 leading-[1.4rem] font-light;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1 {
+    @apply text-[2.625rem]; /* 42px */
+    @apply font-light;
+    @apply mb-[0.45466945em];
+  }
+  h2 {
+    @apply text-[1.625rem]; /* 26px */
+    @apply font-semibold;
+    @apply mb-[0.842194em];
+  }
+  h3 {
+    @apply text-[1.0625rem];
+    @apply font-bold;
+  }
+  h4 {
+    @apply text-[0.875rem];
+    @apply font-bold;
+  }
+  h5 {
+    @apply text-[0.875rem];
+    @apply font-bold;
+    @apply leading-[1.29];
+    @apply uppercase;
+  }
+
+  a {
+    @apply cursor-pointer text-sl-blue-600 no-underline focus:text-sl-blue-600;
+  }
+
+  b,
+  strong {
+    font-weight: bolder;
+  }
+
+  img {
+    @apply border-none;
+  }
+
+  svg:not(:root) {
+    @apply overflow-hidden;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    @apply block h-10 w-full rounded border border-gray-500 px-3 py-2 text-[16px] leading-normal focus:border-sl-blue-500 focus:ring-sl-blue-500;
+  }
+
+  hr {
+    @apply clear-both mx-auto my-5 h-0 border-0 border-b border-b-sl-gray-400;
+  }
+}

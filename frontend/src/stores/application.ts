@@ -2,6 +2,8 @@ import { ref } from "vue";
 import { defineStore } from "pinia";
 import { createHttpApi, HttpApi } from "@/api/http";
 import { createWebSocketApi, WebSocketApi } from "@/api/websocket";
+import type { WsMessage } from "@/api/apiTypes";
+import { useDeviceStore } from "./device";
 
 export const useApplicationStore = defineStore("application", () => {
   const initialize = async () => {
@@ -19,6 +21,25 @@ export const useApplicationStore = defineStore("application", () => {
   /* APIs */
   const httpApi = ref<HttpApi | null>(null);
   const websocketApi = ref<WebSocketApi | null>(null);
+
+  const deviceStore = useDeviceStore();
+  const handleMessage = (message: WsMessage) => {
+    console.log("Message received:", message);
+    switch (message.type) {
+      case "device_update":
+        deviceStore.handleDeviceUpdate(message);
+        break;
+      case "tonk":
+        deviceStore.handleTonk(message);
+        break;
+      case "error":
+        console.error("Error:", message);
+        break;
+      default:
+        console.warn("Unknown message type:", message.type);
+        break;
+    }
+  };
 
   /* Password & Auth */
   const isAuthenticated = ref<boolean>(false);
@@ -39,9 +60,7 @@ export const useApplicationStore = defineStore("application", () => {
   const authenticate = async (password: string) => {
     const newHttpApi = createHttpApi(password);
     const newWebsocketApi = createWebSocketApi(password);
-    newWebsocketApi.onMessage((message) => {
-      console.log("Message received:", message);
-    });
+    newWebsocketApi.onMessage(handleMessage);
     newWebsocketApi.onStateChange((state) => {
       console.log("State changed:", state);
     });
