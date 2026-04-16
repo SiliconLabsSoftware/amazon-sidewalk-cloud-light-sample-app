@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import StateBoolean from "./StateBoolean.vue";
+import { ref, computed } from "vue";
 import StateInteger from "./StateInteger.vue";
 import StateFloat from "./StateFloat.vue";
 import StateText from "./StateText.vue";
@@ -19,7 +18,17 @@ const props = withDefaults(defineProps<Props>(), {
   showDivider: false,
 });
 
-const value = ref(props.state);
+const dirtyValue = ref(props.state);
+const isDirty = ref(false);
+const value = computed({
+  get() {
+    return isDirty.value ? dirtyValue.value : props.state;
+  },
+  set(v: string) {
+    dirtyValue.value = v;
+    isDirty.value = true;
+  },
+});
 
 const emit = defineEmits(["set"]);
 
@@ -34,16 +43,7 @@ function doSet() {
     value.value = "0";
   }
   emit("set", value.value);
-}
-
-function determineBoolean(val: unknown): boolean {
-  if (val == 0 || val == 1) {
-    return val == 1;
-  }
-  if (val === "true" || val === "false") {
-    return val === "true";
-  }
-  return Boolean(val);
+  isDirty.value = false;
 }
 </script>
 
@@ -71,11 +71,7 @@ function determineBoolean(val: unknown): boolean {
           NOT IMPLEMENTED YET
         </div>
         <div v-else-if="props.capability.type === 'b'">
-          <StateToggle
-            toggleType="binary"
-            :modelValue="determineBoolean(props.state)"
-            :interactive="false"
-          ></StateToggle>
+          <StateToggle toggleType="binary" :modelValue="props.state" :interactive="false" />
         </div>
         <div v-else-if="props.capability.key === 'ping'" :class="dataStyle(props.state)">
           <span v-if="props.state" class="text-sm font-normal text-sl-gray-700"
@@ -90,7 +86,7 @@ function determineBoolean(val: unknown): boolean {
       </div>
       <div v-if="props.capability.mode === 'a'" class="mb-4">
         <form @submit.prevent="doSet">
-          <div v-if="props.capability.type !== 'b'" class="flex flex-grow flex-row">
+          <div v-if="props.capability.type !== 'b'" class="flex grow flex-row">
             <div class="basis-3/4 items-center justify-center">
               <StateInteger v-if="props.capability.type === 'i'" v-model="value" />
               <StateFloat v-if="props.capability.type === 'f'" v-model="value" />
@@ -107,10 +103,11 @@ function determineBoolean(val: unknown): boolean {
           </div>
           <div v-else class="flex items-center justify-center">
             <div>
-              <StateBoolean
+              <StateToggle
                 v-if="props.capability.type === 'b'"
                 v-model="value"
                 @update:model-value="doSet"
+                toggleType="binary"
               />
             </div>
           </div>

@@ -1,53 +1,55 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from "vue";
+import { computed } from "vue";
 
 interface Props {
   interactive?: boolean;
-  modelValue?: boolean;
+  modelValue?: string | boolean | number;
   toggleType?: "binary" | "boolean" | "onoff" | "yesno";
 }
-
 const props = withDefaults(defineProps<Props>(), {
   interactive: true,
   modelValue: false,
   toggleType: "boolean",
 });
 
-const emit = defineEmits(["toggle"]);
+const emit = defineEmits(["update:modelValue"]);
 
-const state = reactive({
-  toggleState: false,
-});
+const booleanValue = computed(() => resolveToBoolean(props.modelValue));
 
-watch(
-  () => props.modelValue,
-  (v) => {
-    state.toggleState = v;
-  },
-);
-
-function updateToggle() {
+function handleClick() {
   if (props.interactive) {
-    state.toggleState = !state.toggleState;
-    emit("toggle", toggleValue());
+    emit("update:modelValue", resolveToExternalType(!booleanValue.value));
   }
 }
 
-function toggleValue() {
+function resolveToExternalType(val: boolean): string | number | boolean {
   switch (props.toggleType) {
     case "binary":
-      return state.toggleState ? 1 : 0;
+      return val ? 1 : 0;
     case "onoff":
-      return state.toggleState ? "on" : "off";
+      return val ? "on" : "off";
     case "yesno":
-      return state.toggleState ? "yes" : "no";
+      return val ? "yes" : "no";
     default:
-      return state.toggleState;
+      return val;
   }
+}
+
+function resolveToBoolean(val: unknown): boolean {
+  if (val == 0 || val == 1) {
+    return val == 1;
+  } else if (val === "true" || val === "false") {
+    return val === "true";
+  } else if (val === "no" || val === "yes") {
+    return val === "yes";
+  } else if (val === "off" || val === "on") {
+    return val === "on";
+  }
+  return Boolean(val);
 }
 
 const toggleLabel = computed(() => {
-  return toggleValue();
+  return resolveToExternalType(booleanValue.value);
 });
 </script>
 
@@ -56,23 +58,23 @@ const toggleLabel = computed(() => {
     <div
       class="h-[20px] w-[60px] rounded-full border"
       :class="{
-        'border-sl-blue-400 bg-sl-blue-100': state.toggleState,
-        'border-sl-gray-800 bg-sl-gray-700': !state.toggleState,
+        'border-sl-blue-400 bg-sl-blue-100': booleanValue,
+        'border-sl-gray-800 bg-sl-gray-700': !booleanValue,
       }"
     />
     <div
       class="absolute top-0 inline-block h-[40px] w-[40px] rounded-full"
       :class="{
-        'left-[24px] bg-sl-blue-500': state.toggleState,
-        'left-[-10px] bg-sl-gray-400': !state.toggleState,
+        'left-[24px] bg-sl-blue-500': booleanValue,
+        'left-[-10px] bg-sl-gray-400': !booleanValue,
         'cursor-pointer transition-all duration-150 ease-out hover:shadow-md': props.interactive,
-        'hover:bg-sl-blue-800': props.interactive && state.toggleState,
-        'hover:bg-sl-blue-100': props.interactive && !state.toggleState,
+        'hover:bg-sl-blue-800': props.interactive && booleanValue,
+        'hover:bg-sl-blue-100': props.interactive && !booleanValue,
       }"
-      @click="updateToggle"
+      @click="handleClick"
     >
       <img
-        v-if="!state.toggleState"
+        v-if="!booleanValue"
         src="/images/times-icon.svg"
         alt="Toggled Off"
         class="relative top-[5px] left-[5px] w-[30px]"
