@@ -1,48 +1,10 @@
 <script setup lang="ts">
-// import { storeToRefs } from "pinia";
-// import { useDeviceStore } from "@/stores/device";
-import { computed, ref } from "vue";
 import CardPanel from "@/components/CardPanel.vue";
-
-// const deviceStore = useDeviceStore();
-// const { lastUpdate } = storeToRefs(deviceStore);
-const lastUpdate = ref(new Date());
-const monthTable = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-const lastUpdatedTime = computed(() => {
-  const d = new Date(lastUpdate.value);
-  const month = d.getMonth();
-  const year = d.getFullYear();
-  const date = d.getDate();
-
-  const rawMinute = d.getMinutes();
-  const minute = rawMinute <= 9 ? "0" + rawMinute : rawMinute;
-
-  const rawHour = d.getHours();
-  const hour = rawHour % 12;
-  let meridiem = "AM";
-  if (rawHour > 11 && rawHour < 24) {
-    meridiem = "PM";
-  }
-  return `${monthTable[month]} ${date}, ${year} @ ${hour}:${minute} ${meridiem}`;
-});
 </script>
 
 <template>
   <CardPanel>
-    <div class="p-4 text-left text-[26px]">
+    <div class="flex items-center p-4 text-left text-[26px]">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         class="mr-2 inline-block w-10"
@@ -57,9 +19,7 @@ const lastUpdatedTime = computed(() => {
       </svg>
       <span class="text-bold">Uplink</span>
     </div>
-    <div class="bg-sl-gray-700 p-3 text-[12px] text-white">
-      Last updated <strong>{{ lastUpdatedTime }}</strong>
-    </div>
+    <div class="bg-sl-gray-700 p-3 text-[12px] text-white">Sensor type capabilities</div>
     <div class="p-4">
       <slot></slot>
     </div>

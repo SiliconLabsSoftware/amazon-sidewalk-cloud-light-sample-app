@@ -2,8 +2,7 @@
 interface Props {
   classes: string;
 }
-// eslint-disable-next-line
-const props = defineProps<Props>();
+defineProps<Props>();
 </script>
 
 <template>

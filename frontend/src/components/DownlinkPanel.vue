@@ -1,19 +1,10 @@
 <script setup lang="ts">
-// import { useDeviceStore } from "@/stores/device";
-import { ref } from "vue";
 import CardPanel from "@/components/CardPanel.vue";
-// const deviceStore = useDeviceStore();
-
-// const props = defineProps({
-//   pin: String,
-// });
-
-const pin = ref("1234567890");
 </script>
 
 <template>
   <CardPanel class="pb-[125px]">
-    <div class="p-4 text-left text-[26px]">
+    <div class="flex items-center p-4 text-left text-[26px]">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         class="mr-2 inline-block w-10"
@@ -29,7 +20,7 @@ const pin = ref("1234567890");
       <span class="text-bold">Downlink</span>
     </div>
     <div class="bg-sl-gray-700 p-3 text-[12px] wrap-break-word text-white">
-      Connected to <strong>{{ pin }}</strong>
+      Actuator type capabilities
     </div>
     <div class="p-4">
       <slot></slot>

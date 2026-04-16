@@ -34,7 +34,7 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, from) => {
+router.beforeEach((to) => {
   const applicationStore = useApplicationStore();
 
   if (applicationStore.isAuthenticating && to.name !== "login") {
