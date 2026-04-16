@@ -32,6 +32,9 @@ export const useApplicationStore = defineStore("application", () => {
       case "tonk":
         deviceStore.handleTonk(message);
         break;
+      case "report_event":
+        deviceStore.handleReportEvent(message);
+        break;
       case "error":
         console.error("Error:", message);
         break;

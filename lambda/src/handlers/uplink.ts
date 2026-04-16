@@ -97,7 +97,7 @@ async function handlePairing(
   await transport.sendPacket(deviceId, urlMsg);
   await transport.sendPacket(deviceId, new ReadyMessage());
 
-  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: createdDevice };
+  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: createdDevice, event: "uplink" };
   await broadcastToClients(wsMessage);
 }
 
@@ -106,7 +106,7 @@ async function handleCapability(
   capabilities: Device["capabilities"],
 ): Promise<void> {
   const updated = await updateDeviceCapabilities(deviceId, capabilities);
-  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
+  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated, event: "uplink" };
   await broadcastToClients(wsMessage);
 }
 
@@ -124,7 +124,7 @@ async function handleState(
   }
 
   const updated = await updateDeviceState(deviceId, filtered);
-  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
+  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated, event: "uplink" };
   await broadcastToClients(wsMessage);
 }
 
@@ -139,7 +139,7 @@ async function handlePing(
 }
 
 async function handleTonk(deviceId: string, timestamp: string): Promise<void> {
-  const wsMessage: WsTonkMessage = { type: "tonk", deviceId, timestamp };
+  const wsMessage: WsTonkMessage = { type: "tonk", deviceId, timestamp, event: "uplink" };
   await broadcastToClients(wsMessage);
   await refreshDeviceTtl(deviceId);
 }

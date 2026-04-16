@@ -1,6 +1,6 @@
 import { Device } from "../database/databaseTypes.ts";
 
-type WsMessageType = "device_update" | "tonk" | "error" | "set_state" | "tink";
+type WsMessageType = "device_update" | "tonk" | "error" | "set_state" | "tink" | "report_event";
 
 interface WsMessageBase {
   type: WsMessageType;
@@ -9,12 +9,14 @@ interface WsMessageBase {
 export interface WsDeviceUpdateMessage extends WsMessageBase {
   type: "device_update";
   device: Device;
+  event?: "uplink" | "downlink";
 }
 
 export interface WsTonkMessage extends WsMessageBase {
   type: "tonk";
   deviceId: string;
   timestamp: string;
+  event?: "uplink" | "downlink";
 }
 
 export interface WsErrorMessage extends WsMessageBase {
@@ -33,9 +35,16 @@ export interface WsTinkMessage extends WsMessageBase {
   deviceId: string;
 }
 
+export interface WsReportEventMessage extends WsMessageBase {
+  type: "report_event";
+  deviceId: string;
+  direction: "uplink" | "downlink";
+}
+
 export type WsMessage =
   | WsDeviceUpdateMessage
   | WsTonkMessage
   | WsErrorMessage
   | WsSetStateMessage
-  | WsTinkMessage;
+  | WsTinkMessage
+  | WsReportEventMessage;

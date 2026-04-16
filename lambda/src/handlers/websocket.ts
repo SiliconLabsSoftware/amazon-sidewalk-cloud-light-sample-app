@@ -9,7 +9,7 @@ import { getDevice, updateDeviceState } from "../database/device.ts";
 import { validatePassword } from "../lib/auth.ts";
 import { StateMessage, TinkMessage } from "../lib/deviceProtocolBuilder.ts";
 import { transportForDevice } from "../lib/deviceTransport.ts";
-import type { WsMessage, WsDeviceUpdateMessage, WsErrorMessage } from "../lib/websocketTypes.ts";
+import type { WsMessage, WsDeviceUpdateMessage, WsErrorMessage, WsReportEventMessage } from "../lib/websocketTypes.ts";
 import { broadcastToClients, sendToClient } from "../lib/websocketPublish.ts";
 
 // Extended type for $connect event which includes headers
@@ -138,7 +138,7 @@ async function handleSetState(
   await transport.sendPacket(deviceId, stateMsg);
 
   const updated = await updateDeviceState(deviceId, filtered);
-  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
+  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated, event: "downlink" };
   await broadcastToClients(wsMessage);
 }
 
@@ -152,6 +152,9 @@ async function handleTink(connectionId: string, deviceId: string): Promise<void>
   const tinkMsg = new TinkMessage({ timestamp: String(Date.now()) });
   const transport = transportForDevice(device.type);
   await transport.sendPacket(deviceId, tinkMsg);
+
+  const reportEvent: WsReportEventMessage = { type: "report_event", deviceId, direction: "downlink" };
+  await broadcastToClients(reportEvent);
 }
 
 async function sendError(connectionId: string, message: string): Promise<void> {

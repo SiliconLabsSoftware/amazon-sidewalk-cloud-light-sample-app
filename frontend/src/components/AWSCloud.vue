@@ -1,34 +1,33 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-// import { storeToRefs } from "pinia";
-// import { useDeviceStore } from "@/stores/device";
+import { computed } from "vue";
+import { storeToRefs } from "pinia";
+import { useDeviceStore } from "@/stores/device";
 
-// const deviceStore = useDeviceStore();
-// const { rxBlip, txBlip } = storeToRefs(deviceStore);
-const rxBlip = ref(true);
-const txBlip = ref(true);
+const props = defineProps<{ deviceId: string }>();
 
-const rxStyle = computed(() => {
-  return rxBlip.value ? "bg-sl-blue-500" : "bg-white";
-});
+const deviceStore = useDeviceStore();
+const { uplinkBlips, downlinkBlips } = storeToRefs(deviceStore);
 
-const txStyle = computed(() => {
-  return txBlip.value ? "bg-sl-blue-500" : "bg-white";
-});
+const uplinkActive = computed(() => uplinkBlips.value[props.deviceId] ?? false);
+const downlinkActive = computed(() => downlinkBlips.value[props.deviceId] ?? false);
 </script>
 
 <template>
   <div class="relative mb-5">
     <img src="/images/aws-cloud.svg" alt="AWS Cloud" />
     <div
-      id="txBeacon"
-      class="absolute top-[55px] left-[210px] h-[30px] w-[30px] rounded-full border-[3px] border-sl-gray-300 transition-colors duration-150 ease-out"
-      :class="txStyle"
-    ></div>
+      id="uplinkBeacon"
+      class="absolute top-[158px] left-[130px] flex h-[30px] w-[30px] items-center justify-center rounded-full border-[3px] border-sl-gray-300 bg-white text-xl font-bold text-sl-gray-300 transition-colors duration-150 ease-out"
+      :class="{ 'bg-sl-blue-500 text-white': uplinkActive }"
+    >
+      &uarr;
+    </div>
     <div
-      id="rxBeacon"
-      class="absolute top-[158px] left-[150px] h-[30px] w-[30px] rounded-full border-[3px] border-sl-gray-300 transition-colors duration-150 ease-out"
-      :class="rxStyle"
-    ></div>
+      id="downlinkBeacon"
+      class="absolute top-[158px] left-[210px] flex h-[30px] w-[30px] items-center justify-center rounded-full border-[3px] border-sl-gray-300 bg-white text-xl font-bold text-sl-gray-300 transition-colors duration-150 ease-out"
+      :class="{ 'bg-sl-blue-500 text-white': downlinkActive }"
+    >
+      &darr;
+    </div>
   </div>
 </template>

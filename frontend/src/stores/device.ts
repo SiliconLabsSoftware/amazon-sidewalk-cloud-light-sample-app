@@ -1,11 +1,30 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
-import type { Device, WsDeviceUpdateMessage, WsTonkMessage } from "@/api/apiTypes.ts";
+import type {
+  Device,
+  WsDeviceUpdateMessage,
+  WsTonkMessage,
+  WsReportEventMessage,
+} from "@/api/apiTypes.ts";
 import { useApplicationStore } from "./application.ts";
 
 export const useDeviceStore = defineStore("device", () => {
   const applicationStore = useApplicationStore();
   const devices = ref<Device[]>([]);
+
+  /* Blips */
+  const uplinkBlips = ref<Record<string, boolean>>({});
+  const downlinkBlips = ref<Record<string, boolean>>({});
+  const triggerBlip = (deviceId: string, direction: "uplink" | "downlink") => {
+    const blips = direction === "uplink" ? uplinkBlips : downlinkBlips;
+    blips.value[deviceId] = true;
+    setTimeout(
+      () => {
+        blips.value[deviceId] = false;
+      },
+      50 + Math.random() * 125,
+    );
+  };
 
   const refreshDevices = async () => {
     if (!applicationStore.httpApi) {
@@ -33,7 +52,9 @@ export const useDeviceStore = defineStore("device", () => {
 
   const handleTonk = (message: WsTonkMessage) => {
     console.log("Tonk received:", message);
-    // TODO: handle tonk
+    if (message.event) {
+      triggerBlip(message.deviceId, message.event);
+    }
   };
 
   const setState = (deviceId: string, stateId: string, value: string) => {
@@ -45,7 +66,6 @@ export const useDeviceStore = defineStore("device", () => {
       deviceId,
       entries: [{ key: stateId, value }],
     });
-    // TODO downlink blip
   };
 
   const handleDeviceUpdate = (message: WsDeviceUpdateMessage) => {
@@ -56,15 +76,25 @@ export const useDeviceStore = defineStore("device", () => {
     } else {
       devices.value.push(message.device);
     }
+    if (message.event) {
+      triggerBlip(message.device.deviceId, message.event);
+    }
+  };
+
+  const handleReportEvent = (message: WsReportEventMessage) => {
+    triggerBlip(message.deviceId, message.direction);
   };
 
   return {
     devices,
+    uplinkBlips,
+    downlinkBlips,
     refreshDevices,
     getDevice,
     initiateTink,
     setState,
     handleDeviceUpdate,
     handleTonk,
+    handleReportEvent,
   };
 });

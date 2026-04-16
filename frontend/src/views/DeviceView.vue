@@ -50,7 +50,7 @@ const actuatorStates = computed(
       class="mx-auto grid grid-cols-1 px-4 md:w-[760px] md:grid-cols-2 md:gap-[16px] lg:gap-[40px]"
     >
       <div class="grid-col">
-        <AWSCloud></AWSCloud>
+        <AWSCloud :deviceId="deviceId" />
         <DownlinkPanel>
           <EmptyItem v-if="actuatorStates.length === 0" />
           <DeviceState
