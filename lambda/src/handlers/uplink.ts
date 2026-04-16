@@ -89,15 +89,18 @@ async function handlePairing(
     smsn: parsed.smsn,
   });
 
-  const smsn = parsed.smsn ?? deviceId;
   const baseUrl = process.env.BASE_URL!;
   const password = process.env.FRONTEND_PASSWORD!;
 
-  const urlMsg = new MagicUrlMessage({ baseUrl, password, smsn });
+  const urlMsg = new MagicUrlMessage({ baseUrl, password, deviceId });
   await transport.sendPacket(deviceId, urlMsg);
   await transport.sendPacket(deviceId, new ReadyMessage());
 
-  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: createdDevice, event: "uplink" };
+  const wsMessage: WsDeviceUpdateMessage = {
+    type: "device_update",
+    device: createdDevice,
+    event: "uplink",
+  };
   await broadcastToClients(wsMessage);
 }
 
@@ -106,7 +109,11 @@ async function handleCapability(
   capabilities: Device["capabilities"],
 ): Promise<void> {
   const updated = await updateDeviceCapabilities(deviceId, capabilities);
-  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated, event: "uplink" };
+  const wsMessage: WsDeviceUpdateMessage = {
+    type: "device_update",
+    device: updated,
+    event: "uplink",
+  };
   await broadcastToClients(wsMessage);
 }
 

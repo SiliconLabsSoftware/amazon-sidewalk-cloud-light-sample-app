@@ -46,7 +46,11 @@ router.beforeEach((to) => {
     !applicationStore.isAuthenticated &&
     to.name !== "login"
   ) {
-    return { name: "login", query: { redirect: to.fullPath } };
+    const query: Record<string, string> = { redirect: to.path };
+    if (typeof to.query.token === "string") {
+      query.token = to.query.token;
+    }
+    return { name: "login", query };
   }
 });
 

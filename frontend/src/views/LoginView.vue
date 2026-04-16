@@ -10,11 +10,19 @@ const applicationStore = useApplicationStore();
 const { authErrorMessage } = storeToRefs(applicationStore);
 onBeforeMount(() => {
   authErrorMessage.value = null;
+  autoLoginFromToken();
 });
 
 const router = useRouter();
 const route = useRoute();
 const loading = ref(false);
+
+async function autoLoginFromToken() {
+  const token = route.query.token as string | undefined;
+  if (!token) return;
+  password.value = token;
+  await submit();
+}
 
 async function submit() {
   loading.value = true;
@@ -98,7 +106,7 @@ const copyright = computed(() => {
         </form>
       </div>
     </div>
-    <div class="w-full text-[10px] dark:text-white">
+    <div class="w-full text-[10px] text-white">
       {{ copyright }}
     </div>
   </div>

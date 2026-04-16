@@ -15,12 +15,12 @@ export abstract class ProtocolMessage {
 export interface MagicUrlMessageInput {
   baseUrl: string;
   password: string;
-  smsn: string;
+  deviceId: string;
 }
 
 export class MagicUrlMessage extends ProtocolMessage {
   constructor(input: MagicUrlMessageInput) {
-    super(`url ${input.baseUrl}?token=${input.password}&smsn=${input.smsn}`);
+    super(`url ${input.baseUrl}/devices/${input.deviceId}?token=${input.password}`);
   }
 }
 
