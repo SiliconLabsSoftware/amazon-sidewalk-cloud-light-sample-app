@@ -135,7 +135,7 @@ async function handleSetState(
 
   const stateMsg = new StateMessage({ entries: filtered });
   const transport = transportForDevice(device.type);
-  await transport.sendPacket(deviceId, stateMsg.toString());
+  await transport.sendPacket(deviceId, stateMsg);
 
   const updated = await updateDeviceState(deviceId, filtered);
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated };
@@ -151,7 +151,7 @@ async function handleTink(connectionId: string, deviceId: string): Promise<void>
 
   const tinkMsg = new TinkMessage({ timestamp: String(Date.now()) });
   const transport = transportForDevice(device.type);
-  await transport.sendPacket(deviceId, tinkMsg.toString());
+  await transport.sendPacket(deviceId, tinkMsg);
 }
 
 async function sendError(connectionId: string, message: string): Promise<void> {

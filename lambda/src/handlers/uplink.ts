@@ -94,8 +94,8 @@ async function handlePairing(
   const password = process.env.FRONTEND_PASSWORD!;
 
   const urlMsg = new MagicUrlMessage({ baseUrl, password, smsn });
-  await transport.sendPacket(deviceId, urlMsg.toString());
-  await transport.sendPacket(deviceId, new ReadyMessage().toString());
+  await transport.sendPacket(deviceId, urlMsg);
+  await transport.sendPacket(deviceId, new ReadyMessage());
 
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: createdDevice };
   await broadcastToClients(wsMessage);
@@ -134,7 +134,7 @@ async function handlePing(
   transport: DeviceTransport,
 ): Promise<void> {
   const pong = new PongMessage({ timestamp });
-  await transport.sendPacket(deviceId, pong.toString());
+  await transport.sendPacket(deviceId, pong);
   await refreshDeviceTtl(deviceId);
 }
 

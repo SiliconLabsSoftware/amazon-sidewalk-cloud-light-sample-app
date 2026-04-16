@@ -2,6 +2,7 @@ import { IoTDataPlaneClient, PublishCommand } from "@aws-sdk/client-iot-data-pla
 import { IoTWirelessClient, SendDataToWirelessDeviceCommand } from "@aws-sdk/client-iot-wireless";
 import { nextDeviceSeq } from "../database/device.ts";
 import type { Device } from "../database/databaseTypes.ts";
+import type { ProtocolMessage } from "./deviceProtocolBuilder.ts";
 
 const iotDataClient = new IoTDataPlaneClient({
   region: process.env.REGION,
@@ -24,7 +25,7 @@ export function transportForDevice(deviceType: Device["type"]): DeviceTransport 
 export abstract class DeviceTransport {
   abstract decodeMessage(message: string): string;
 
-  abstract sendPacket(deviceId: string, packet: string): Promise<void>;
+  abstract sendPacket(deviceId: string, message: ProtocolMessage): Promise<void>;
 }
 
 export class MqttDeviceTransport extends DeviceTransport {
@@ -32,11 +33,11 @@ export class MqttDeviceTransport extends DeviceTransport {
     return normalizeSerialInput(message);
   }
 
-  async sendPacket(deviceId: string, packet: string): Promise<void> {
+  async sendPacket(deviceId: string, message: ProtocolMessage): Promise<void> {
     await iotDataClient.send(
       new PublishCommand({
         topic: `CloudLight/simulated/${deviceId}/downlink`,
-        payload: packet,
+        payload: message.toString(),
         qos: 1,
       }),
     );
@@ -51,8 +52,9 @@ export class WirelessDeviceTransport extends DeviceTransport {
     return normalizeSerialInput(decoded);
   }
 
-  async sendPacket(deviceId: string, packet: string): Promise<void> {
+  async sendPacket(deviceId: string, message: ProtocolMessage): Promise<void> {
     const nextSeq = await nextDeviceSeq(deviceId);
+    const packet = message.toString();
     await iotWirelessClient.send(
       new SendDataToWirelessDeviceCommand({
         Id: deviceId,

@@ -1,4 +1,4 @@
-abstract class ProtocolMessage {
+export abstract class ProtocolMessage {
   readonly encoded: string;
 
   constructor(encoded: string) {
