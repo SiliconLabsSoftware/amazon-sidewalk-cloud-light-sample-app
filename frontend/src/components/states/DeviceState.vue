@@ -3,13 +3,14 @@ import { ref, computed } from "vue";
 import StateInteger from "./StateInteger.vue";
 import StateFloat from "./StateFloat.vue";
 import StateText from "./StateText.vue";
-// import StateChart from "./StateChart.vue"; // TODO: implement
+import StateChart from "./StateChart.vue";
 import StateToggle from "./StateToggle.vue";
 import type { Capability } from "@/api/apiTypes";
 
 interface Props {
   capability: Capability;
   state: string | undefined;
+  chartStates: string[];
   showDivider?: boolean;
 }
 
@@ -54,21 +55,13 @@ function doSet() {
     </h3>
     <div>
       <div v-if="props.capability.mode === 's'" class="w-full text-center">
-        <div class="pb-6" v-if="props.capability.display === 'c'" :class="dataStyle(props.state)">
-          <!-- <template v-if="props.capability.value">
-            <StateChart
-              v-if="props.capability.value"
-              :low="20"
-              :high="95"
-              :thekey="props.capability.key"
-              :value="parseInt(props.capability.value)"
-              :values="props.capability.values"
-            />
-            <span class="pr-2 text-sm font-normal text-sl-gray-700">Current temperature:</span>
-            <span>{{ props.capability.value + "°" }}</span>
+        <div class="pb-6" v-if="props.capability.display === 'c'">
+          <template v-if="props.chartStates.length > 0">
+            <StateChart :values="props.chartStates" />
           </template>
-          <template v-else>{{ noData }}</template> -->
-          NOT IMPLEMENTED YET
+          <template v-else>
+            <span class="text-sl-gray-400">{{ noData }}</span>
+          </template>
         </div>
         <div v-else-if="props.capability.type === 'b'">
           <StateToggle toggleType="binary" :modelValue="props.state" :interactive="false" />

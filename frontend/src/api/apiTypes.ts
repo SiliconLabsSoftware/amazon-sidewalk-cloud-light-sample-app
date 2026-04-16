@@ -27,6 +27,7 @@ export interface WsDeviceUpdateMessage extends WsMessageBase {
   type: "device_update";
   device: Device;
   event?: "uplink" | "downlink";
+  changedKeys?: string[];
 }
 
 export interface WsTonkMessage extends WsMessageBase {

@@ -60,6 +60,7 @@ const actuatorStates = computed(
             :showDivider="index < actuatorStates.length - 1"
             :capability="state.capability"
             :state="state.state"
+            :chartStates="deviceStore.getChartSeries(deviceId, state.capability.key)"
             @set="(value) => deviceStore.setState(deviceId, state.capability.key, value)"
           />
         </DownlinkPanel>
@@ -74,6 +75,7 @@ const actuatorStates = computed(
             :showDivider="index < sensorStates.length - 1"
             :capability="state.capability"
             :state="state.state"
+            :chartStates="deviceStore.getChartSeries(deviceId, state.capability.key)"
           />
         </UplinkPanel>
       </div>

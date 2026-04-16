@@ -66,6 +66,9 @@ export const useApplicationStore = defineStore("application", () => {
     newWebsocketApi.onMessage(handleMessage);
     newWebsocketApi.onStateChange((state) => {
       console.log("State changed:", state);
+      if (state === "connected") {
+        deviceStore.clearAllChartSeries();
+      }
     });
     newWebsocketApi.onError((error) => {
       console.error("Error:", error);

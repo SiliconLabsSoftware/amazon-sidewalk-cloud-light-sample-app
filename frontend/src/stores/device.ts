@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, reactive } from "vue";
 import { defineStore } from "pinia";
 import type {
   Device,
@@ -8,9 +8,22 @@ import type {
 } from "@/api/apiTypes.ts";
 import { useApplicationStore } from "./application.ts";
 
+const CHART_BUFFER_MAX = 50;
+
 export const useDeviceStore = defineStore("device", () => {
   const applicationStore = useApplicationStore();
   const devices = ref<Device[]>([]);
+
+  /* Chart series — deviceId -> capKey -> ordered values */
+  const chartSeries = reactive<Record<string, Record<string, string[]>>>({});
+  const getChartSeries = (deviceId: string, key: string): string[] => {
+    return chartSeries[deviceId]?.[key] ?? [];
+  };
+  const clearAllChartSeries = () => {
+    for (const key of Object.keys(chartSeries)) {
+      delete chartSeries[key];
+    }
+  };
 
   /* Blips */
   const uplinkBlips = ref<Record<string, boolean>>({});
@@ -69,15 +82,35 @@ export const useDeviceStore = defineStore("device", () => {
   };
 
   const handleDeviceUpdate = (message: WsDeviceUpdateMessage) => {
-    if (devices.value.find((d) => d.deviceId === message.device.deviceId)) {
-      devices.value = devices.value.map((d) =>
-        d.deviceId === message.device.deviceId ? message.device : d,
-      );
+    const deviceId = message.device.deviceId;
+
+    if (devices.value.find((d) => d.deviceId === deviceId)) {
+      devices.value = devices.value.map((d) => (d.deviceId === deviceId ? message.device : d));
     } else {
       devices.value.push(message.device);
     }
+
+    if (message.changedKeys) {
+      if (!chartSeries[deviceId]) {
+        chartSeries[deviceId] = {};
+      }
+      for (const key of message.changedKeys) {
+        if (message.device.capabilities.find((c) => c.key === key)?.display !== "c") continue;
+        const value = message.device.state[key];
+        if (value === undefined) continue;
+        if (!chartSeries[deviceId][key]) {
+          chartSeries[deviceId][key] = [];
+        }
+        const buf = chartSeries[deviceId][key];
+        buf.push(value);
+        if (buf.length > CHART_BUFFER_MAX) {
+          buf.shift();
+        }
+      }
+    }
+
     if (message.event) {
-      triggerBlip(message.device.deviceId, message.event);
+      triggerBlip(deviceId, message.event);
     }
   };
 
@@ -91,6 +124,8 @@ export const useDeviceStore = defineStore("device", () => {
     downlinkBlips,
     refreshDevices,
     getDevice,
+    getChartSeries,
+    clearAllChartSeries,
     initiateTink,
     setState,
     handleDeviceUpdate,

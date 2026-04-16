@@ -1,242 +1,125 @@
 <script setup lang="ts">
-import { computed, ref, reactive, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 
-const el = ref();
+const props = defineProps<{
+  values: string[];
+}>();
 
-const props = defineProps({
-  low: Number,
-  high: Number,
-  thekey: String,
-  value: Number,
-  values: {
-    type: Array,
-  },
-});
+const canvasContainer = ref<HTMLElement>();
 
-interface IValues {
-  at: number;
-  value: string;
-}
+const CHART_W = 280;
+const CHART_H = 140;
+const PAD_LEFT = 36;
+const PAD_TOP = 8;
+const PAD_BOTTOM = 4;
+const PLOT_W = CHART_W - PAD_LEFT;
+const PLOT_H = CHART_H - PAD_TOP - PAD_BOTTOM;
 
-const values = reactive(props.values || []);
-
-interface IPlotMetrics {
-  axesXStart: number;
-  axesYStart: number;
-  elapsedTime: number;
-  min: number;
-  minTime: number;
-  max: number;
-  maxTime?: number;
-  width: number;
-  height: number;
-}
-
-const plotMetrics: IPlotMetrics = {
-  axesXStart: 30,
-  axesYStart: 5,
-  elapsedTime: 0,
-  min: -Infinity,
-  minTime: 0,
-  max: Infinity,
-  maxTime: 0,
-  width: 250,
-  height: 130,
-};
-
-function drawAxes(ctx: any) {
-  ctx.beginPath();
-  ctx.moveTo(plotMetrics.axesXStart, plotMetrics.axesYStart);
-  ctx.lineTo(plotMetrics.axesXStart, plotMetrics.axesYStart + plotMetrics.height);
-  ctx.lineTo(
-    plotMetrics.axesXStart + plotMetrics.width,
-    plotMetrics.axesYStart + plotMetrics.height,
-  );
-  ctx.strokeWidth = 2;
-  ctx.strokeStyle = "#7C7C7C";
-  ctx.stroke();
-}
-
-function drawMeasureMarkers(ctx: any) {
-  // Determine min and max values from our values
-  let temps: number[] = [];
-  let times: number[] = [];
-  if (values) {
-    temps = values?.map((v: any) => parseInt(v.value));
-    times = values?.map((v: any) => parseInt(v.at));
-
-    // Truncate to a second per pixel
-    if (times.length > plotMetrics.width) {
-      times.splice(0, times.length - plotMetrics.width);
-    }
-
-    plotMetrics.minTime = times[0];
-    plotMetrics.maxTime = times[times.length - 1];
-    plotMetrics.elapsedTime = (plotMetrics.maxTime - plotMetrics.minTime) / 1000;
+function niceRange(min: number, max: number): { lo: number; hi: number; step: number } {
+  if (min === max) {
+    const margin = Math.max(Math.abs(min) * 0.1, 1);
+    min -= margin;
+    max += margin;
   }
-
-  const min: number = Math.min(...temps);
-  const max: number = Math.max(...temps);
-
-  plotMetrics.min = min % 10 > 0 ? min - (min % 10) : min;
-  plotMetrics.max = max % 10 > 0 ? max + (10 - (max % 10)) : max;
-  const labelCenterOffset = 4;
-
-  const steps = (plotMetrics.max - plotMetrics.min) / 10;
-  const stepAmount = Math.floor((plotMetrics.height - plotMetrics.axesYStart) / steps);
-  ctx.font = "12px Inter,Helvetica,Arial,sans-serif";
-  ctx.fillStyle = "#7C7C7C";
-  ctx.textAlign = "end";
-  ctx.fillText(plotMetrics.min, 25, plotMetrics.height + labelCenterOffset);
-  for (let i = 1; i <= steps; i++) {
-    ctx.fillText(
-      plotMetrics.min + i * 10,
-      25,
-      plotMetrics.height + labelCenterOffset - stepAmount * i,
-    );
-  }
-
-  drawAlarmMarkers(ctx, plotMetrics.min, plotMetrics.max);
-}
-
-function drawAlarmMarkers(ctx: any, min: number, max: number) {
-  // How many points are on the vertical marker
-  const vHeight = plotMetrics.height;
-  const vStep = vHeight / (max - min);
-  const alarmInset = 5;
-
-  // Determine low alarm if one is present
-  if (props.low) {
-    const low = props.low - min;
-    const alarmY = vHeight + plotMetrics.axesYStart - low * vStep;
-
-    ctx.beginPath();
-    ctx.strokeStyle = "#C2C2C2";
-    ctx.setLineDash([2]);
-    ctx.moveTo(plotMetrics.axesXStart + alarmInset, alarmY);
-    ctx.lineTo(plotMetrics.axesXStart + plotMetrics.width - alarmInset, alarmY);
-    ctx.stroke();
-  }
-
-  // Determine high alarm if one is present
-  if (props.high) {
-    const high = props.high - min;
-    const alarmY = vHeight + plotMetrics.axesYStart - high * vStep;
-
-    ctx.beginPath();
-    ctx.strokeStyle = "#C2C2C2";
-    ctx.setLineDash([2]);
-    ctx.moveTo(plotMetrics.axesXStart + alarmInset, alarmY);
-    ctx.lineTo(plotMetrics.axesXStart + plotMetrics.width - alarmInset, alarmY);
-    ctx.stroke();
-  }
-}
-
-function plot(ctx: any) {
-  ctx.setLineDash([]);
-  ctx.strokeStyle = "#7C7C7C";
-
-  const min = plotMetrics.min;
-  const max = plotMetrics.max;
-
-  let atmin = Infinity;
-  let atmax = plotMetrics.axesXStart + plotMetrics.width;
-  const yStep = (plotMetrics.height + plotMetrics.axesYStart) / (max - min);
-
-  let truncatedValues;
-  const totalInputs = 50;
-  if (values.length <= totalInputs) {
-    truncatedValues = values;
-  } else {
-    truncatedValues = values.splice(0, 1);
-  }
-  if (truncatedValues) {
-    truncatedValues.forEach((a: any) => {
-      if (a.at > atmax) {
-        atmax = a.at;
-      }
-      if (a.at < atmin) {
-        atmin = a.at;
-      }
-    });
-    const xf = plotMetrics.width / (atmax - atmin);
-
-    let first = true;
-    ctx.beginPath();
-    values.forEach((a: any) => {
-      if (first) {
-        ctx.moveTo(plotMetrics.axesXStart + 1, plotMetrics.axesYStart);
-        first = false;
-      }
-
-      const x = (a.at - atmin) * xf;
-      const y = (max - a.value) * yStep;
-
-      ctx.lineTo(plotMetrics.axesXStart + x, y);
-      renderDot(ctx, plotMetrics.axesXStart + x, y);
-    });
-    ctx.stroke();
-  }
-}
-
-function renderDot(ctx: any, x: number, y: number) {
-  ctx.arc(x, y, 3, 0, 2 * Math.PI, false);
-  ctx.stroke();
+  const range = max - min;
+  const rough = range / 4;
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const candidates = [1, 2, 5, 10];
+  const step = mag * (candidates.find((c) => c * mag >= rough) ?? 10);
+  const lo = Math.floor(min / step) * step;
+  const hi = Math.ceil(max / step) * step;
+  return { lo, hi, step };
 }
 
 function render() {
-  const width = el.value?.offsetWidth;
-  const height = el.value?.offsetHeight;
-  const paper = document.createElement("canvas");
-  paper.setAttribute("width", width);
-  paper.setAttribute("height", height);
-  el.value?.replaceChildren(paper);
-  const ctx = paper.getContext("2d");
-  if (ctx) {
-    ctx.clearRect(0, 0, width, height);
-    drawAxes(ctx);
-    drawMeasureMarkers(ctx);
-    plot(ctx);
+  if (!canvasContainer.value) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = CHART_W;
+  canvas.height = CHART_H;
+  canvasContainer.value.replaceChildren(canvas);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const nums = props.values.map((v) => parseFloat(v)).filter((n) => !isNaN(n));
+  if (nums.length === 0) return;
+
+  const dataMin = Math.min(...nums);
+  const dataMax = Math.max(...nums);
+  const { lo, hi, step } = niceRange(dataMin, dataMax);
+  const yRange = hi - lo;
+
+  ctx.clearRect(0, 0, CHART_W, CHART_H);
+
+  // Y axis + grid lines
+  ctx.font = "11px Inter,Helvetica,Arial,sans-serif";
+  ctx.textAlign = "end";
+  ctx.textBaseline = "middle";
+  for (let v = lo; v <= hi + step * 0.01; v += step) {
+    const y = PAD_TOP + PLOT_H - ((v - lo) / yRange) * PLOT_H;
+    ctx.fillStyle = "#7C7C7C";
+    ctx.fillText(Number.isInteger(v) ? String(v) : v.toFixed(1), PAD_LEFT - 4, y);
+    ctx.beginPath();
+    ctx.strokeStyle = "#E5E5E5";
+    ctx.lineWidth = 1;
+    ctx.moveTo(PAD_LEFT, y);
+    ctx.lineTo(PAD_LEFT + PLOT_W, y);
+    ctx.stroke();
   }
+
+  // Axes
+  ctx.beginPath();
+  ctx.strokeStyle = "#7C7C7C";
+  ctx.lineWidth = 2;
+  ctx.moveTo(PAD_LEFT, PAD_TOP);
+  ctx.lineTo(PAD_LEFT, PAD_TOP + PLOT_H);
+  ctx.lineTo(PAD_LEFT + PLOT_W, PAD_TOP + PLOT_H);
+  ctx.stroke();
+
+  // Plot line
+  if (nums.length < 2) {
+    const y = PAD_TOP + PLOT_H - ((nums[0]! - lo) / yRange) * PLOT_H;
+    ctx.beginPath();
+    ctx.arc(PAD_LEFT + PLOT_W / 2, y, 3, 0, 2 * Math.PI);
+    ctx.fillStyle = "#3B82F6";
+    ctx.fill();
+    return;
+  }
+
+  const xStep = PLOT_W / (nums.length - 1);
+
+  ctx.beginPath();
+  ctx.strokeStyle = "#3B82F6";
+  ctx.lineWidth = 2;
+  nums.forEach((v, i) => {
+    const x = PAD_LEFT + i * xStep;
+    const y = PAD_TOP + PLOT_H - ((v - lo) / yRange) * PLOT_H;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Dots
+  ctx.fillStyle = "#3B82F6";
+  nums.forEach((v, i) => {
+    const x = PAD_LEFT + i * xStep;
+    const y = PAD_TOP + PLOT_H - ((v - lo) / yRange) * PLOT_H;
+    ctx.beginPath();
+    ctx.arc(x, y, 2.5, 0, 2 * Math.PI);
+    ctx.fill();
+  });
 }
 
-const alarmTrigger = computed(() => {
-  if (props.value && props.low) {
-    if (props.value <= props.low) {
-      return true;
-    }
-  }
-  if (props.value && props.high) {
-    if (props.value >= props.high) {
-      return true;
-    }
-  }
-  return false;
-});
-
-const alarmStyle = computed(() => {
-  return alarmTrigger.value ? "bg-sl-red-500" : "bg-sl-blue-500";
-});
-
-watch(values, () => {
-  render();
-});
+onMounted(render);
+watch(() => props.values.length, render);
 </script>
 
 <template>
-  <div class="relative">
-    <div ref="el" style="width: 295px; height: 160px"></div>
-    <div
-      class="absolute top-[-40px] left-[-44px] h-[28px] w-[28px] rounded-full border-2 border-white shadow-md"
-      :class="alarmStyle"
-    >
-      <img
-        v-show="alarmTrigger"
-        src="/images/exclamation-icon.svg"
-        alt="Exclamation"
-        class="h=[20px] relative top-[2px] left-[2px] w-[20px]"
-      />
-      <img v-show="!alarmTrigger" src="/images/checkmark-icon.svg" alt="Checkmark" />
+  <div class="flex flex-col items-center gap-2">
+    <div ref="canvasContainer" :style="{ width: CHART_W + 'px', height: CHART_H + 'px' }"></div>
+    <div v-if="props.values.length > 0" class="text-sm text-sl-gray-700">
+      <span class="pr-2">Current:</span>
+      <span class="font-bold">{{ props.values[props.values.length - 1] }}</span>
     </div>
   </div>
 </template>

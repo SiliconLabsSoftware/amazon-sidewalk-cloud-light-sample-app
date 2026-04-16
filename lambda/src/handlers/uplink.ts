@@ -124,7 +124,12 @@ async function handleState(
   }
 
   const updated = await updateDeviceState(deviceId, filtered);
-  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated, event: "uplink" };
+  const wsMessage: WsDeviceUpdateMessage = {
+    type: "device_update",
+    device: updated,
+    event: "uplink",
+    changedKeys: filtered.map((e) => e.key),
+  };
   await broadcastToClients(wsMessage);
 }
 
