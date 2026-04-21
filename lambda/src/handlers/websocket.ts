@@ -21,9 +21,8 @@ interface WebSocketConnectEvent extends APIGatewayProxyWebsocketEventV2 {
 export const handler = async (
   event: APIGatewayProxyWebsocketEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
-  console.log("WebSocket event:", JSON.stringify(event, null, 2));
-
   const routeKey = event.requestContext.routeKey;
+  console.log(`[websocket] ← Received WebSocket event (route=${routeKey}):`, JSON.stringify(event, null, 2));
 
   try {
     switch (routeKey) {
@@ -34,17 +33,18 @@ export const handler = async (
       case "$default":
         return await handleDefault(event);
       default:
-        console.log(`Unknown route: ${routeKey}`);
+        console.log(`[websocket] ✗ Unknown route: ${routeKey}`);
         return { statusCode: 400, body: "Unknown route" };
     }
   } catch (error) {
-    console.error(`Error handling ${routeKey}:`, error);
+    console.error(`[websocket] ✗ Error handling ${routeKey}:`, error);
     return { statusCode: 500, body: "Internal server error" };
   }
 };
 
 const handleConnect = async (event: WebSocketConnectEvent): Promise<APIGatewayProxyResultV2> => {
   const connectionId = event.requestContext.connectionId;
+  console.log(`[websocket/connect] New connection attempt: ${connectionId}`);
 
   if (
     !validatePassword(
@@ -54,12 +54,12 @@ const handleConnect = async (event: WebSocketConnectEvent): Promise<APIGatewayPr
         event.headers?.Authorization,
     )
   ) {
-    console.log(`Connection rejected - invalid password`);
+    console.log(`[websocket/connect] ✗ Connection rejected — invalid password`);
     return { statusCode: 401, body: "Unauthorized" };
   }
 
   await createConnection(connectionId);
-  console.log(`Connection established: ${connectionId}`);
+  console.log(`[websocket/connect] ✓ Connection established and saved: ${connectionId}`);
 
   return { statusCode: 200, body: "Connected" };
 };
@@ -68,9 +68,10 @@ const handleDisconnect = async (
   event: APIGatewayProxyWebsocketEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
   const connectionId = event.requestContext.connectionId;
+  console.log(`[websocket/disconnect] Client disconnected: ${connectionId}`);
 
   await deleteConnection(connectionId);
-  console.log(`Connection closed: ${connectionId}`);
+  console.log(`[websocket/disconnect] Connection removed from DynamoDB: ${connectionId}`);
 
   return { statusCode: 200, body: "Disconnected" };
 };
@@ -79,25 +80,31 @@ const handleDefault = async (
   event: APIGatewayProxyWebsocketEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
   const connectionId = event.requestContext.connectionId;
-  console.log(`Message from ${connectionId}: ${event.body}`);
+  console.log(`[websocket/message] ← Received message from client ${connectionId}: ${event.body}`);
 
   let message: WsMessage;
   try {
     message = JSON.parse(event.body ?? "");
   } catch {
+    console.log(`[websocket/message] ✗ Failed to parse JSON from client ${connectionId}`);
     await sendError(connectionId, "Invalid JSON");
     return { statusCode: 400, body: "Invalid JSON" };
   }
 
+  console.log(`[websocket/message] Parsed client command: type="${message.type}"`);
+
   try {
     switch (message.type) {
       case "set_state":
+        console.log(`[websocket/message] Processing set_state for device ${message.deviceId}:`, JSON.stringify(message.entries));
         await handleSetState(connectionId, message.deviceId, message.entries);
         break;
       case "tink":
+        console.log(`[websocket/message] Processing tink for device ${message.deviceId}`);
         await handleTink(connectionId, message.deviceId);
         break;
       default:
+        console.log(`[websocket/message] ✗ Unknown message type: ${(message as { type: string }).type}`);
         await sendError(
           connectionId,
           `Unknown inbound message type: ${(message as { type: string }).type}`,
@@ -106,7 +113,7 @@ const handleDefault = async (
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error(`Error handling ${message.type}:`, error);
+    console.error(`[websocket/message] ✗ Error handling ${message.type}:`, error);
     await sendError(connectionId, errorMessage);
     return { statusCode: 500, body: "Error processing command" };
   }
@@ -121,6 +128,7 @@ async function handleSetState(
 ): Promise<void> {
   const device = await getDevice(deviceId);
   if (!device) {
+    console.log(`[websocket/set_state] ✗ Device not found: ${deviceId}`);
     await sendError(connectionId, `Device not found: ${deviceId}`);
     return;
   }
@@ -129,15 +137,19 @@ async function handleSetState(
   const filtered = entries.filter((e) => actuatorKeys.has(e.key));
 
   if (filtered.length === 0) {
+    console.log(`[websocket/set_state] ✗ No valid actuator keys in entries for device ${deviceId}`);
     await sendError(connectionId, "No valid actuator keys in entries");
     return;
   }
 
   const stateMsg = new StateMessage({ entries: filtered });
   const transport = transportForDevice(device.type);
+  console.log(`[websocket/set_state] → Sending state command to device ${deviceId} via ${device.type}:`, JSON.stringify(filtered));
   await transport.sendPacket(deviceId, stateMsg);
 
+  console.log(`[websocket/set_state] Updating state in DynamoDB for device ${deviceId}`);
   const updated = await updateDeviceState(deviceId, filtered);
+  console.log(`[websocket/set_state] → Broadcasting device_update to all WebSocket clients`);
   const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated, event: "downlink" };
   await broadcastToClients(wsMessage);
 }
@@ -145,23 +157,27 @@ async function handleSetState(
 async function handleTink(connectionId: string, deviceId: string): Promise<void> {
   const device = await getDevice(deviceId);
   if (!device) {
+    console.log(`[websocket/tink] ✗ Device not found: ${deviceId}`);
     await sendError(connectionId, `Device not found: ${deviceId}`);
     return;
   }
 
   const tinkMsg = new TinkMessage({ timestamp: String(Date.now()) });
   const transport = transportForDevice(device.type);
+  console.log(`[websocket/tink] → Sending tink command to device ${deviceId} via ${device.type}`);
   await transport.sendPacket(deviceId, tinkMsg);
 
+  console.log(`[websocket/tink] → Broadcasting report_event to all WebSocket clients`);
   const reportEvent: WsReportEventMessage = { type: "report_event", deviceId, direction: "downlink" };
   await broadcastToClients(reportEvent);
 }
 
 async function sendError(connectionId: string, message: string): Promise<void> {
+  console.log(`[websocket] → Sending error to client ${connectionId}: "${message}"`);
   const errorMsg: WsErrorMessage = { type: "error", message };
   try {
     await sendToClient(connectionId, errorMsg);
   } catch (error) {
-    console.error(`Failed to send error to ${connectionId}:`, error);
+    console.error(`[websocket] ✗ Failed to send error to ${connectionId}:`, error);
   }
 }

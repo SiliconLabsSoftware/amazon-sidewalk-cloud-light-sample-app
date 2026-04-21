@@ -34,10 +34,13 @@ export class MqttDeviceTransport extends DeviceTransport {
   }
 
   async sendPacket(deviceId: string, message: ProtocolMessage): Promise<void> {
+    const topic = `CloudLight/simulated/${deviceId}/downlink`;
+    const payload = message.toString();
+    console.log(`[transport/mqtt] → Publishing to MQTT topic "${topic}": "${payload}"`);
     await iotDataClient.send(
       new PublishCommand({
-        topic: `CloudLight/simulated/${deviceId}/downlink`,
-        payload: message.toString(),
+        topic,
+        payload,
         qos: 1,
       }),
     );
@@ -55,6 +58,7 @@ export class WirelessDeviceTransport extends DeviceTransport {
   async sendPacket(deviceId: string, message: ProtocolMessage): Promise<void> {
     const nextSeq = await nextDeviceSeq(deviceId);
     const packet = message.toString();
+    console.log(`[transport/sidewalk] → Sending downlink to Sidewalk device ${deviceId} (seq=${nextSeq}): "${packet}"`);
     await iotWirelessClient.send(
       new SendDataToWirelessDeviceCommand({
         Id: deviceId,
