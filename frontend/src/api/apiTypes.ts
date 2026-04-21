@@ -17,7 +17,14 @@ export interface Device {
   expires: number;
 }
 
-type WsMessageType = "device_update" | "tonk" | "error" | "set_state" | "tink" | "report_event";
+type WsMessageType =
+  | "device_update"
+  | "tonk"
+  | "error"
+  | "set_state"
+  | "tink"
+  | "report_event"
+  | "keepalive";
 
 interface WsMessageBase {
   type: WsMessageType;
@@ -59,10 +66,16 @@ export interface WsReportEventMessage extends WsMessageBase {
   direction: "uplink" | "downlink";
 }
 
+export interface WsKeepaliveMessage extends WsMessageBase {
+  type: "keepalive";
+  at: number;
+}
+
 export type WsMessage =
   | WsDeviceUpdateMessage
   | WsTonkMessage
   | WsErrorMessage
   | WsSetStateMessage
   | WsTinkMessage
-  | WsReportEventMessage;
+  | WsReportEventMessage
+  | WsKeepaliveMessage;

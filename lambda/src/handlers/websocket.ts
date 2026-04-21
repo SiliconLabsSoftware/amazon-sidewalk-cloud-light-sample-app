@@ -103,6 +103,9 @@ const handleDefault = async (
         console.log(`[websocket/message] Processing tink for device ${message.deviceId}`);
         await handleTink(connectionId, message.deviceId);
         break;
+      case "keepalive":
+        // No-op: receiving the message is enough to keep the connection alive.
+        break;
       default:
         console.log(`[websocket/message] ✗ Unknown message type: ${(message as { type: string }).type}`);
         await sendError(
