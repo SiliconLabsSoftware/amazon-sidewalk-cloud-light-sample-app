@@ -40,9 +40,6 @@ function dataStyle(styleValue: string) {
 }
 
 function doSet() {
-  if (props.capability.key === "led0" && value.value === "") {
-    value.value = "0";
-  }
   emit("set", value.value);
   isDirty.value = false;
 }
