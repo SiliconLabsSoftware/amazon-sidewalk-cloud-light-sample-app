@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 import { useDeviceStore } from "@/stores/device";
 import CardPanel from "@/components/CardPanel.vue";
 import DeviceState from "@/components//states/DeviceState.vue";
@@ -19,6 +20,8 @@ if (!device.value) {
 }
 
 const deviceStore = useDeviceStore();
+const { tinkLatency } = storeToRefs(deviceStore);
+const latencyMs = computed(() => tinkLatency.value[deviceId.value] ?? null);
 
 const sensorStates = computed(
   () =>
@@ -38,11 +41,39 @@ const actuatorStates = computed(
   <div class="w-full text-center">
     <!-- Header Card -->
     <div class="mx-auto mb-4 px-4 md:w-[760px]">
-      <CardPanel class="flex items-center p-4">
-        <RouterLink :to="{ name: 'devices' }" class="mr-4 text-sl-blue-500 hover:text-sl-blue-700">
-          &larr; Back to Devices
-        </RouterLink>
-        <span class="text-lg font-semibold">{{ deviceId }}</span>
+      <CardPanel class="p-4">
+        <div class="flex items-center">
+          <RouterLink
+            :to="{ name: 'devices' }"
+            class="mr-4 text-sl-blue-500 hover:text-sl-blue-700"
+          >
+            &larr; Back to Devices
+          </RouterLink>
+          <span class="text-lg font-semibold">{{ deviceId }}</span>
+        </div>
+        <div class="mt-3 flex items-center justify-between border-t border-sl-gray-200 pt-3">
+          <div class="flex items-center gap-2">
+            <h3 class="mb-0">Round-trip Latency</h3>
+            <span v-if="latencyMs !== null"> {{ latencyMs }} ms</span>
+            <span v-else class="text-sl-gray-400">Not measured</span>
+            <div>
+              <button
+                class="ml-3 inline-flex h-10 items-center justify-center rounded border border-transparent bg-sl-blue-500 px-4 py-[11px] font-medium text-white shadow-sm transition-colors hover:bg-sl-blue-700 hover:shadow-md focus:ring-2 focus:ring-sl-blue-500 focus:ring-offset-2 focus:outline-none"
+                @click="deviceStore.initiateTink(deviceId)"
+              >
+                Measure
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              class="rounded-lg border border-sl-gray-300 px-4 py-2 text-sm font-medium text-sl-gray-500 hover:bg-sl-gray-100"
+              disabled
+            >
+              Disconnect
+            </button>
+          </div>
+        </div>
       </CardPanel>
     </div>
 

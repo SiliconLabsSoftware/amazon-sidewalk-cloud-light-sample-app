@@ -39,6 +39,10 @@ export const useDeviceStore = defineStore("device", () => {
     );
   };
 
+  /* Tink/tonk round-trip latency — per-device */
+  const pendingTinks: Record<string, Set<string>> = {};
+  const tinkLatency = ref<Record<string, number | null>>({});
+
   const refreshDevices = async () => {
     if (!applicationStore.httpApi) {
       throw new Error("HTTP API not initialized.");
@@ -57,14 +61,22 @@ export const useDeviceStore = defineStore("device", () => {
     if (!applicationStore.websocketApi) {
       throw new Error("WebSocket API not initialized.");
     }
+    if (!pendingTinks[deviceId]) {
+      pendingTinks[deviceId] = new Set();
+    }
+    const timestamp = String(Date.now());
     applicationStore.websocketApi.send({
       type: "tink",
       deviceId,
+      timestamp,
     });
+    pendingTinks[deviceId].add(timestamp);
   };
 
   const handleTonk = (message: WsTonkMessage) => {
-    console.log("Tonk received:", message);
+    if (pendingTinks[message.deviceId]?.delete(message.timestamp)) {
+      tinkLatency.value[message.deviceId] = Date.now() - Number(message.timestamp);
+    }
     if (message.event) {
       triggerBlip(message.deviceId, message.event);
     }
@@ -122,6 +134,7 @@ export const useDeviceStore = defineStore("device", () => {
     devices,
     uplinkBlips,
     downlinkBlips,
+    tinkLatency,
     refreshDevices,
     getDevice,
     getChartSeries,

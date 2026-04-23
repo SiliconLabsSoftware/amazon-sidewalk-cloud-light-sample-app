@@ -193,20 +193,39 @@ Text to display:
 ```
 
 
-### 5. Ping / Pong (Keepalive)
+### 5. Ping / Pong and Tink / Tonk
 
-The device can send a ping to measure round-trip latency:
+Two latency measurement mechanisms exist.
+
+#### Ping / Pong (device-initiated, device ↔ cloud)
+
+The device sends a ping to measure its round-trip latency to the cloud:
 
 ```
 < !ping=<timestamp>
 > !pong=<timestamp>
 ```
 
-The timestamp is epoch milliseconds.
+The device generates the timestamp, the cloud echoes it back unchanged, and the
+device computes `now - timestamp` on receipt. This measures the **device ↔ cloud**
+segment only; the web UI is not involved.
 
-The web UI can also initiate a latency check:
+#### Tink / Tonk (UI-initiated, full round-trip)
+
+The web UI initiates a tink to measure the **full UI → cloud → device → cloud → UI**
+round-trip:
 
 ```
-> !tink=<timestamp>
-< !tonk=<timestamp>
+UI  → cloud   (WebSocket)   { type: "tink", deviceId, timestamp }
+cloud → device (downlink)    !tink=<timestamp>
+device → cloud (uplink)      !tonk=<timestamp>
+cloud → UI     (WebSocket)   { type: "tonk", deviceId, timestamp }
 ```
+
+The frontend generates the timestamp before sending. The cloud passes it through
+to the device, which echoes it back verbatim. The cloud then broadcasts the tonk
+to all connected WebSocket clients. Only the client that owns the original
+timestamp recognises it, computes `now - timestamp`, and displays the result.
+
+This means multiple UI clients can each measure their own independent round-trip
+latency without interfering with each other.

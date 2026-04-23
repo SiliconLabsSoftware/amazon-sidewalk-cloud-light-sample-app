@@ -101,7 +101,7 @@ const handleDefault = async (
         break;
       case "tink":
         console.log(`[websocket/message] Processing tink for device ${message.deviceId}`);
-        await handleTink(connectionId, message.deviceId);
+        await handleTink(connectionId, message.deviceId, message.timestamp);
         break;
       case "keepalive":
         // No-op: receiving the message is enough to keep the connection alive.
@@ -157,7 +157,11 @@ async function handleSetState(
   await broadcastToClients(wsMessage);
 }
 
-async function handleTink(connectionId: string, deviceId: string): Promise<void> {
+async function handleTink(
+  connectionId: string,
+  deviceId: string,
+  timestamp: string,
+): Promise<void> {
   const device = await getDevice(deviceId);
   if (!device) {
     console.log(`[websocket/tink] ✗ Device not found: ${deviceId}`);
@@ -165,9 +169,11 @@ async function handleTink(connectionId: string, deviceId: string): Promise<void>
     return;
   }
 
-  const tinkMsg = new TinkMessage({ timestamp: String(Date.now()) });
+  const tinkMsg = new TinkMessage({ timestamp });
   const transport = transportForDevice(device.type);
-  console.log(`[websocket/tink] → Sending tink command to device ${deviceId} via ${device.type}`);
+  console.log(
+    `[websocket/tink] → Sending tink command to device ${deviceId} via ${device.type} (timestamp=${timestamp})`,
+  );
   await transport.sendPacket(deviceId, tinkMsg);
 
   console.log(`[websocket/tink] → Broadcasting report_event to all WebSocket clients`);

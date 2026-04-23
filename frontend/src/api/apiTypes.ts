@@ -58,6 +58,7 @@ export interface WsSetStateMessage extends WsMessageBase {
 export interface WsTinkMessage extends WsMessageBase {
   type: "tink";
   deviceId: string;
+  timestamp: string;
 }
 
 export interface WsReportEventMessage extends WsMessageBase {
