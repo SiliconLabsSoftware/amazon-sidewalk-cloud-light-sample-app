@@ -56,25 +56,37 @@ export const handler = async (
 
   const device = await getDevice(deviceId);
   if (!device) {
-    console.warn(`[uplink] ✗ Message from unknown device ${deviceId} (verb: ${parsed.verb}) — skipping`);
+    console.warn(
+      `[uplink] ✗ Message from unknown device ${deviceId} (verb: ${parsed.verb}) — skipping`,
+    );
     return "Unknown device";
   }
 
   switch (parsed.verb) {
     case "capability":
-      console.log(`[uplink] Device ${deviceId} reporting capabilities:`, JSON.stringify(parsed.capabilities));
+      console.log(
+        `[uplink] Device ${deviceId} reporting capabilities:`,
+        JSON.stringify(parsed.capabilities),
+      );
       await handleCapability(deviceId, parsed.capabilities);
       break;
     case "state":
-      console.log(`[uplink] Device ${deviceId} reporting state update:`, JSON.stringify(parsed.entries));
+      console.log(
+        `[uplink] Device ${deviceId} reporting state update:`,
+        JSON.stringify(parsed.entries),
+      );
       await handleState(deviceId, device, parsed.entries);
       break;
     case "ping":
-      console.log(`[uplink] Device ${deviceId} sent ping (timestamp=${parsed.timestamp}), will respond with pong`);
+      console.log(
+        `[uplink] Device ${deviceId} sent ping (timestamp=${parsed.timestamp}), will respond with pong`,
+      );
       await handlePing(deviceId, parsed.timestamp, transport);
       break;
     case "tonk":
-      console.log(`[uplink] Device ${deviceId} sent tonk acknowledgment (timestamp=${parsed.timestamp})`);
+      console.log(
+        `[uplink] Device ${deviceId} sent tonk acknowledgment (timestamp=${parsed.timestamp})`,
+      );
       await handleTonk(deviceId, parsed.timestamp);
       break;
     case "unknown":
@@ -91,7 +103,9 @@ async function handlePairing(
   parsed: { version: string; appId: string; smsn?: string },
   transport: DeviceTransport,
 ): Promise<void> {
-  console.log(`[uplink/pairing] Creating device record in DynamoDB (id=${deviceId}, type=${uplinkType})`);
+  console.log(
+    `[uplink/pairing] Creating device record in DynamoDB (id=${deviceId}, type=${uplinkType})`,
+  );
   const createdDevice = await createDevice(deviceId, {
     type: uplinkType,
     protocolVersion: parsed.version,
@@ -120,7 +134,9 @@ async function handleCapability(
   deviceId: string,
   capabilities: Device["capabilities"],
 ): Promise<void> {
-  console.log(`[uplink/capability] Saving ${capabilities.length} capabilities for device ${deviceId}`);
+  console.log(
+    `[uplink/capability] Saving ${capabilities.length} capabilities for device ${deviceId}`,
+  );
   const updated = await updateDeviceCapabilities(deviceId, capabilities);
   console.log(`[uplink/capability] → Broadcasting updated device to WebSocket clients`);
   const wsMessage: WsDeviceUpdateMessage = {
@@ -144,9 +160,14 @@ async function handleState(
     return;
   }
 
-  console.log(`[uplink/state] Updating state in DynamoDB for device ${deviceId}:`, JSON.stringify(filtered));
+  console.log(
+    `[uplink/state] Updating state in DynamoDB for device ${deviceId}:`,
+    JSON.stringify(filtered),
+  );
   const updated = await updateDeviceState(deviceId, filtered);
-  console.log(`[uplink/state] → Broadcasting state change to WebSocket clients (keys: ${filtered.map((e) => e.key).join(", ")})`);
+  console.log(
+    `[uplink/state] → Broadcasting state change to WebSocket clients (keys: ${filtered.map((e) => e.key).join(", ")})`,
+  );
   const wsMessage: WsDeviceUpdateMessage = {
     type: "device_update",
     device: updated,
@@ -168,7 +189,9 @@ async function handlePing(
 }
 
 async function handleTonk(deviceId: string, timestamp: string): Promise<void> {
-  console.log(`[uplink/tonk] → Broadcasting tonk event to WebSocket clients for device ${deviceId}`);
+  console.log(
+    `[uplink/tonk] → Broadcasting tonk event to WebSocket clients for device ${deviceId}`,
+  );
   const wsMessage: WsTonkMessage = { type: "tonk", deviceId, timestamp, event: "uplink" };
   await broadcastToClients(wsMessage);
   await refreshDeviceTtl(deviceId);

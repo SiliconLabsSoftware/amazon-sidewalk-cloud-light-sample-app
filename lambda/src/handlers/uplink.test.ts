@@ -38,12 +38,8 @@ jest.unstable_mockModule("@aws-sdk/client-apigatewaymanagementapi", () => ({
 }));
 
 const mockGetDevice = jest.fn<(id: string) => Promise<Device | undefined>>();
-const mockCreateDevice = jest.fn<
-  (
-    id: string,
-    d: Pick<Device, "type" | "protocolVersion" | "smsn">,
-  ) => Promise<Device>
->();
+const mockCreateDevice =
+  jest.fn<(id: string, d: Pick<Device, "type" | "protocolVersion" | "smsn">) => Promise<Device>>();
 const mockRefreshDeviceTtl = jest.fn<(id: string) => Promise<void>>();
 const mockUpdateDeviceCapabilities =
   jest.fn<(id: string, caps: Device["capabilities"]) => Promise<Device>>();

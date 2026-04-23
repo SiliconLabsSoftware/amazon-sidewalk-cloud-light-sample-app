@@ -58,7 +58,9 @@ export class WirelessDeviceTransport extends DeviceTransport {
   async sendPacket(deviceId: string, message: ProtocolMessage): Promise<void> {
     const nextSeq = await nextDeviceSeq(deviceId);
     const packet = message.toString();
-    console.log(`[transport/sidewalk] → Sending downlink to Sidewalk device ${deviceId} (seq=${nextSeq}): "${packet}"`);
+    console.log(
+      `[transport/sidewalk] → Sending downlink to Sidewalk device ${deviceId} (seq=${nextSeq}): "${packet}"`,
+    );
     await iotWirelessClient.send(
       new SendDataToWirelessDeviceCommand({
         Id: deviceId,

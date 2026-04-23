@@ -9,7 +9,12 @@ import { getDevice, updateDeviceState } from "../database/device.ts";
 import { validatePassword } from "../lib/auth.ts";
 import { StateMessage, TinkMessage } from "../lib/deviceProtocolBuilder.ts";
 import { transportForDevice } from "../lib/deviceTransport.ts";
-import type { WsMessage, WsDeviceUpdateMessage, WsErrorMessage, WsReportEventMessage } from "../lib/websocketTypes.ts";
+import type {
+  WsMessage,
+  WsDeviceUpdateMessage,
+  WsErrorMessage,
+  WsReportEventMessage,
+} from "../lib/websocketTypes.ts";
 import { broadcastToClients, sendToClient } from "../lib/websocketPublish.ts";
 
 // Extended type for $connect event which includes headers
@@ -22,7 +27,10 @@ export const handler = async (
   event: APIGatewayProxyWebsocketEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
   const routeKey = event.requestContext.routeKey;
-  console.log(`[websocket] ← Received WebSocket event (route=${routeKey}):`, JSON.stringify(event, null, 2));
+  console.log(
+    `[websocket] ← Received WebSocket event (route=${routeKey}):`,
+    JSON.stringify(event, null, 2),
+  );
 
   try {
     switch (routeKey) {
@@ -96,7 +104,10 @@ const handleDefault = async (
   try {
     switch (message.type) {
       case "set_state":
-        console.log(`[websocket/message] Processing set_state for device ${message.deviceId}:`, JSON.stringify(message.entries));
+        console.log(
+          `[websocket/message] Processing set_state for device ${message.deviceId}:`,
+          JSON.stringify(message.entries),
+        );
         await handleSetState(connectionId, message.deviceId, message.entries);
         break;
       case "tink":
@@ -107,7 +118,9 @@ const handleDefault = async (
         // No-op: receiving the message is enough to keep the connection alive.
         break;
       default:
-        console.log(`[websocket/message] ✗ Unknown message type: ${(message as { type: string }).type}`);
+        console.log(
+          `[websocket/message] ✗ Unknown message type: ${(message as { type: string }).type}`,
+        );
         await sendError(
           connectionId,
           `Unknown inbound message type: ${(message as { type: string }).type}`,
@@ -147,13 +160,20 @@ async function handleSetState(
 
   const stateMsg = new StateMessage({ entries: filtered });
   const transport = transportForDevice(device.type);
-  console.log(`[websocket/set_state] → Sending state command to device ${deviceId} via ${device.type}:`, JSON.stringify(filtered));
+  console.log(
+    `[websocket/set_state] → Sending state command to device ${deviceId} via ${device.type}:`,
+    JSON.stringify(filtered),
+  );
   await transport.sendPacket(deviceId, stateMsg);
 
   console.log(`[websocket/set_state] Updating state in DynamoDB for device ${deviceId}`);
   const updated = await updateDeviceState(deviceId, filtered);
   console.log(`[websocket/set_state] → Broadcasting device_update to all WebSocket clients`);
-  const wsMessage: WsDeviceUpdateMessage = { type: "device_update", device: updated, event: "downlink" };
+  const wsMessage: WsDeviceUpdateMessage = {
+    type: "device_update",
+    device: updated,
+    event: "downlink",
+  };
   await broadcastToClients(wsMessage);
 }
 
@@ -177,7 +197,11 @@ async function handleTink(
   await transport.sendPacket(deviceId, tinkMsg);
 
   console.log(`[websocket/tink] → Broadcasting report_event to all WebSocket clients`);
-  const reportEvent: WsReportEventMessage = { type: "report_event", deviceId, direction: "downlink" };
+  const reportEvent: WsReportEventMessage = {
+    type: "report_event",
+    deviceId,
+    direction: "downlink",
+  };
   await broadcastToClients(reportEvent);
 }
 
