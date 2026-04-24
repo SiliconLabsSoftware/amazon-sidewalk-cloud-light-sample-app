@@ -172,6 +172,11 @@ else
     echo "Using provided frontend password"
 fi
 
+if [[ ${#FRONTEND_PASSWORD} -gt 20 ]]; then
+    echo "Error: FRONTEND_PASSWORD exceeds 20 characters (max for device downlink URL message)" >&2
+    exit 1
+fi
+
 # Export terraform variables
 export TF_VAR_aws_region=$AWS_REGION
 export TF_VAR_aws_account_id=$AWS_ACCOUNT_ID

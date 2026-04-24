@@ -9,4 +9,5 @@ export AWS_PROFILE="default"
 
 # optional (will be generated if left empty):
 export TERRAFORM_BACKEND_BUCKET=""
+# optional (will be generated if left empty), max 20 characters:
 export FRONTEND_PASSWORD=""
