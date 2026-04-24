@@ -22,7 +22,7 @@ const applicationStore = useApplicationStore();
           <p class="mt-4 text-sl-gray-900">Log in to continue.</p>
           <RouterLink :to="{ name: 'login' }">
             <button
-              class="mt-8 flex w-full items-center justify-center rounded border border-transparent bg-sl-blue-500 p-2 text-base font-medium text-white uppercase hover:bg-sl-blue-700 focus:ring-2 focus:ring-sl-blue-500 focus:ring-offset-2 focus:outline-none"
+              class="mt-8 flex w-full items-center justify-center rounded border border-transparent bg-teal-700 p-2 text-base font-medium text-white uppercase hover:bg-teal-800 focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 focus:outline-none"
             >
               Log in
             </button>

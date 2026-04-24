@@ -20,7 +20,7 @@ const copyright = computed(() => {
         <p class="mb-8 text-sl-gray-800">The page you're looking for is not there.</p>
         <router-link
           to="/devices"
-          class="mt-2 flex w-full items-center justify-center rounded border border-transparent bg-sl-blue-500 p-2 text-base font-medium text-white uppercase hover:bg-sl-blue-700 focus:ring-2 focus:ring-sl-blue-500 focus:ring-offset-2 focus:outline-none"
+          class="mt-2 flex w-full items-center justify-center rounded border border-transparent bg-teal-700 p-2 text-base font-medium text-white uppercase hover:bg-teal-800 focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 focus:outline-none"
         >
           Go to Devices
         </router-link>

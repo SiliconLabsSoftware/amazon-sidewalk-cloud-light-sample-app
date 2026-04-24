@@ -85,7 +85,7 @@ function doSet() {
             <div class="basis-1/4">
               <button
                 type="submit"
-                class="ml-3 inline-flex h-10 items-center justify-center rounded border border-transparent bg-sl-blue-500 px-4 py-[11px] font-medium text-white shadow-sm transition-colors hover:bg-sl-blue-700 hover:shadow-md focus:ring-2 focus:ring-sl-blue-500 focus:ring-offset-2 focus:outline-none"
+                class="ml-3 inline-flex h-10 items-center justify-center rounded border border-transparent bg-teal-700 px-4 py-[11px] font-medium text-white shadow-sm transition-colors hover:bg-teal-800 hover:shadow-md focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 focus:outline-none"
               >
                 Send
               </button>

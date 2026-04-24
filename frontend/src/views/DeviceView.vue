@@ -43,10 +43,7 @@ const actuatorStates = computed(
     <div class="mx-auto mb-4 px-4 md:w-[760px]">
       <CardPanel class="p-4">
         <div class="flex items-center">
-          <RouterLink
-            :to="{ name: 'devices' }"
-            class="mr-4 text-sl-blue-500 hover:text-sl-blue-700"
-          >
+          <RouterLink :to="{ name: 'devices' }" class="mr-4 text-teal-700 hover:text-teal-950">
             &larr; Back to Devices
           </RouterLink>
           <span class="text-lg font-semibold">{{ deviceId }}</span>
@@ -58,7 +55,7 @@ const actuatorStates = computed(
             <span v-else class="text-sl-gray-400">Not measured</span>
             <div>
               <button
-                class="ml-3 inline-flex h-10 items-center justify-center rounded border border-transparent bg-sl-blue-500 px-4 py-[11px] font-medium text-white shadow-sm transition-colors hover:bg-sl-blue-700 hover:shadow-md focus:ring-2 focus:ring-sl-blue-500 focus:ring-offset-2 focus:outline-none"
+                class="ml-3 inline-flex h-10 items-center justify-center rounded border border-transparent bg-teal-700 px-4 py-[11px] font-medium text-white shadow-sm transition-colors hover:bg-teal-800 hover:shadow-md focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 focus:outline-none"
                 @click="deviceStore.initiateTink(deviceId)"
               >
                 Measure

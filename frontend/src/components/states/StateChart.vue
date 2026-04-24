@@ -81,7 +81,7 @@ function render() {
     const y = PAD_TOP + PLOT_H - ((nums[0]! - lo) / yRange) * PLOT_H;
     ctx.beginPath();
     ctx.arc(PAD_LEFT + PLOT_W / 2, y, 3, 0, 2 * Math.PI);
-    ctx.fillStyle = "#3B82F6";
+    ctx.fillStyle = "#0f766e";
     ctx.fill();
     return;
   }
@@ -89,7 +89,7 @@ function render() {
   const xStep = PLOT_W / (nums.length - 1);
 
   ctx.beginPath();
-  ctx.strokeStyle = "#3B82F6";
+  ctx.strokeStyle = "#0f766e";
   ctx.lineWidth = 2;
   nums.forEach((v, i) => {
     const x = PAD_LEFT + i * xStep;
@@ -100,7 +100,7 @@ function render() {
   ctx.stroke();
 
   // Dots
-  ctx.fillStyle = "#3B82F6";
+  ctx.fillStyle = "#0f766e";
   nums.forEach((v, i) => {
     const x = PAD_LEFT + i * xStep;
     const y = PAD_TOP + PLOT_H - ((v - lo) / yRange) * PLOT_H;

@@ -22,7 +22,6 @@
   --color-gray-5: #e1e1e1;
   --color-gray-6: #f5f5f5;
 
-  /* OOB */
   --color-sl-gray-100: #f2f2f2;
   --color-sl-gray-200: #ececec;
   --color-sl-gray-300: #cccccc;
@@ -32,16 +31,6 @@
   --color-sl-gray-700: #666666;
   --color-sl-gray-800: #666666;
   --color-sl-gray-900: #333333;
-
-  --color-sl-blue-100: #c3d8ff;
-  --color-sl-blue-200: #c3d8ff;
-  --color-sl-blue-300: #4c8afe;
-  --color-sl-blue-400: #4c8afe;
-  --color-sl-blue-500: #0f62fe;
-  --color-sl-blue-600: #0f62fe;
-  --color-sl-blue-700: #0147ca;
-  --color-sl-blue-800: #0147ca;
-  --color-sl-blue-900: #013086;
 }
 
 #app {
@@ -50,68 +39,6 @@
   font-weight: normal;
   @apply min-h-screen bg-[url('/images/organic-4-alt.jpg')] bg-cover;
 }
-
-/* a {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
-} */
-
-/* @media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-} */
-
-/* @media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
-} */
-
-/*
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
-}
-
-body {
-  min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
-  line-height: 1.6;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Fira Sans",
-    "Droid Sans",
-    "Helvetica Neue",
-    sans-serif;
-  font-size: 15px;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-} */
 
 @layer base {
   body {
@@ -150,7 +77,7 @@ body {
   }
 
   a {
-    @apply cursor-pointer text-sl-blue-600 no-underline focus:text-sl-blue-600;
+    @apply cursor-pointer text-teal-700 no-underline focus:text-teal-700;
   }
 
   b,
@@ -170,7 +97,7 @@ body {
   input,
   select,
   textarea {
-    @apply block h-10 w-full rounded border border-gray-500 px-3 py-2 text-[16px] leading-normal focus:border-sl-blue-500 focus:ring-sl-blue-500;
+    @apply block h-10 w-full rounded border border-gray-500 px-3 py-2 text-[16px] leading-normal focus:border-teal-700 focus:ring-teal-700;
   }
 
   hr {

@@ -19,7 +19,7 @@ const downlinkActive = computed(() => downlinkBlips.value[props.deviceId] ?? fal
       id="uplinkBeacon"
       class="absolute bottom-[2%] left-[30%] flex h-[30px] w-[30px] items-center justify-center rounded-full border-[3px] border-sl-gray-300 text-xl font-bold transition-colors duration-150 ease-out"
       :class="{
-        'bg-sl-blue-500 text-white': uplinkActive,
+        'bg-teal-700 text-white': uplinkActive,
         'bg-white text-sl-gray-300': !uplinkActive,
       }"
     >
@@ -29,7 +29,7 @@ const downlinkActive = computed(() => downlinkBlips.value[props.deviceId] ?? fal
       id="downlinkBeacon"
       class="absolute bottom-[2%] left-[50%] flex h-[30px] w-[30px] items-center justify-center rounded-full border-[3px] border-sl-gray-300 text-xl font-bold transition-colors duration-150 ease-out"
       :class="{
-        'bg-sl-blue-500 text-white': downlinkActive,
+        'bg-teal-700 text-white': downlinkActive,
         'bg-white text-sl-gray-300': !downlinkActive,
       }"
     >

@@ -58,18 +58,18 @@ const toggleLabel = computed(() => {
     <div
       class="h-[20px] w-[60px] rounded-full border"
       :class="{
-        'border-sl-blue-400 bg-sl-blue-100': booleanValue,
+        'border-teal-400 bg-teal-100': booleanValue,
         'border-sl-gray-800 bg-sl-gray-700': !booleanValue,
       }"
     />
     <div
       class="absolute top-0 inline-block h-[40px] w-[40px] rounded-full"
       :class="{
-        'left-[24px] bg-sl-blue-500': booleanValue,
+        'left-[24px] bg-teal-700': booleanValue,
         'left-[-10px] bg-sl-gray-400': !booleanValue,
         'cursor-pointer transition-all duration-150 ease-out hover:shadow-md': props.interactive,
-        'hover:bg-sl-blue-800': props.interactive && booleanValue,
-        'hover:bg-sl-blue-100': props.interactive && !booleanValue,
+        'hover:bg-teal-800': props.interactive && booleanValue,
+        'hover:bg-teal-100': props.interactive && !booleanValue,
       }"
       @click="handleClick"
     >

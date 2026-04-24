@@ -41,7 +41,7 @@ async function refresh() {
           v-else
           :disabled="refreshing"
           @click="refresh"
-          class="rounded-lg bg-sl-blue-500 px-4 py-2 text-white hover:bg-sl-blue-700"
+          class="rounded-lg bg-teal-700 px-4 py-2 text-white hover:bg-teal-800"
         >
           Refresh
         </button>

@@ -82,14 +82,14 @@ const copyright = computed(() => {
               name="password"
               ref="password-input"
               required
-              class="w-full rounded border border-sl-gray-300 px-3 py-3 text-center text-[14px] placeholder-sl-gray-400 focus:border-sl-blue-500 focus:ring-sl-blue-500 sm:max-w-xs"
+              class="w-full rounded border border-sl-gray-300 px-3 py-3 text-center text-[14px] placeholder-sl-gray-400 focus:border-teal-700 focus:ring-teal-700 sm:max-w-xs"
               placeholder="Password"
               autofocus
             />
             <a
               aria-label="clear password input"
               @click="clearInput()"
-              class="cursor-pointer text-sm text-sl-gray-500 hover:text-sl-blue-500"
+              class="cursor-pointer text-sm text-sl-gray-500 hover:text-teal-700"
               >clear password</a
             >
           </div>
@@ -99,7 +99,7 @@ const copyright = computed(() => {
           <button
             type="submit"
             :disabled="loading"
-            class="mt-8 flex w-full items-center justify-center rounded border border-transparent bg-sl-blue-500 p-2 text-base font-medium text-white uppercase hover:bg-sl-blue-700 focus:ring-2 focus:ring-sl-blue-500 focus:ring-offset-2 focus:outline-none"
+            class="mt-8 flex w-full items-center justify-center rounded border border-transparent bg-teal-700 p-2 text-base font-medium text-white uppercase hover:bg-teal-800 focus:ring-2 focus:ring-teal-700 focus:ring-offset-2 focus:outline-none"
           >
             Continue
           </button>
