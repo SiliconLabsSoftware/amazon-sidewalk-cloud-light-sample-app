@@ -1,7 +1,11 @@
+locals {
+  mqtt_topic_wireless_received = "CloudLight/received"
+}
+
 resource "aws_iot_topic_rule" "wireless" {
   name        = "CloudLightUplink"
   enabled     = true
-  sql         = "SELECT * FROM 'CloudLight/received'"
+  sql         = "SELECT * FROM '${local.mqtt_topic_wireless_received}'"
   sql_version = "2016-03-23"
 
   lambda {
