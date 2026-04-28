@@ -7,4 +7,8 @@ services:
     volumes:
       - $HOME/.aws/credentials:/root/.aws/credentials:ro
       - ./:/cloud-light
-    command: ["deploy"]
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-}
+      - AWS_REGION=${AWS_REGION:-}
+      - TERRAFORM_BACKEND_BUCKET=${TERRAFORM_BACKEND_BUCKET:-}
+      - FRONTEND_PASSWORD=${FRONTEND_PASSWORD:-}
