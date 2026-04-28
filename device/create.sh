@@ -19,10 +19,18 @@ source ../configure.sh
 mkdir certs/$THING_NAME
 
 cp ./device.sample.js certs/$THING_NAME/device.js
-sed -i '' "s/__thing_name__/$THING_NAME/g" certs/$THING_NAME/device.js
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sed -i '' "s/__thing_name__/$THING_NAME/g" certs/$THING_NAME/device.js
+else
+  sed -i "s/__thing_name__/$THING_NAME/g" certs/$THING_NAME/device.js
+fi
 
 AWS_IOT_ENDPOINT=`aws iot describe-endpoint --endpoint-type iot:Data-ATS | jq -r .endpointAddress`
-sed -i '' "s/__aws_iot_endpoint__/$AWS_IOT_ENDPOINT/g" certs/$THING_NAME/device.js
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sed -i '' "s/__aws_iot_endpoint__/$AWS_IOT_ENDPOINT/g" certs/$THING_NAME/device.js
+else
+  sed -i "s/__aws_iot_endpoint__/$AWS_IOT_ENDPOINT/g" certs/$THING_NAME/device.js
+fi
 
 aws iot create-thing --thing-name ${THING_NAME} | tee certs/$THING_NAME/device.json
 
