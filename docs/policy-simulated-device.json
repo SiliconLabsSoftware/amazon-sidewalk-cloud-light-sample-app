@@ -1,0 +1,22 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "SimulatedDevice",
+            "Effect": "Allow",
+            "Action": [
+                "iot:DescribeEndpoint",
+                "iot:DetachThingPrincipal",
+                "iot:CreateThing",
+                "iot:DeleteCertificate",
+                "iot:AttachPolicy",
+                "iot:DeleteThing",
+                "iot:AttachThingPrincipal",
+                "iot:DetachPolicy",
+                "iot:CreateKeysAndCertificate",
+                "iot:UpdateCertificate"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

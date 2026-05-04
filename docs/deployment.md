@@ -40,42 +40,25 @@ Required environment variables: `AWS_REGION`, `TERRAFORM_BACKEND_BUCKET`, `FRONT
 
 ## AWS Permissions
 
-### Deployer permissions
+The IAM user or role running deployments needs permissions across multiple AWS services. For a quick start, `AdministratorAccess` works. For least-privilege, three IAM policy documents are provided in the `docs/` folder. Create these as IAM policies and attach them to your deployer user or role.
 
-The IAM user or role used to deploy needs broad permissions across multiple AWS services. For a quick start, `AdministratorAccess` works. For least-privilege, the deployer needs permissions for:
+**In every policy file, replace `ACCOUNT_ID` with your 12-digit AWS account ID** (e.g. `123456789012`). You can find your account ID in the AWS console or by running `aws sts get-caller-identity`.
 
-- **S3** — create bucket, put/delete objects, list (for Terraform state bucket and frontend hosting)
-- **DynamoDB** — create table (Terraform lock table `cloud-light-tfstatelock` and application table `CloudLight`)
-- **Lambda** — create/update/delete functions, manage permissions
-- **API Gateway** — create/manage HTTP and WebSocket APIs, stages, integrations, deployments
-- **IoT Core** — create/manage topic rules, policies, describe endpoints
-- **IoT Wireless** — create/manage destinations
-- **CloudFront** — create/manage distributions, create invalidations
-- **CloudWatch Logs** — create/manage log groups
-- **IAM** — create roles and policies (for Lambda execution role and IoT Wireless destination role)
-- **STS** — `GetCallerIdentity` (used to resolve the AWS account ID)
+| Policy file | Purpose | When needed |
+|---|---|---|
+| [`policy-terraform-backend.json`](policy-terraform-backend.json) | Terraform state S3 bucket and DynamoDB lock table | Every deployment (init step) |
+| [`policy-deploy.json`](policy-deploy.json) | All infrastructure: Lambda, API Gateway, IoT Core, IoT Wireless, S3, CloudFront, DynamoDB, CloudWatch Logs, IAM roles/policies | Every deployment (tf step) |
+| [`policy-simulated-device.json`](policy-simulated-device.json) | IoT thing and certificate management for the device simulator | Only when using the [device simulator](device-simulator.md) |
+
+The deployer also needs `sts:GetCallerIdentity` (allowed by default for all IAM identities) — the deploy script uses it to resolve the AWS account ID.
+
+### Policy scope
+
+The policies are scoped to resources prefixed with `CloudLight` or `cloud-light` where possible. Services that don't support resource-level conditions (API Gateway, IoT Core topic rules, CloudFront) use `*` resources.
 
 ### Simulated device permissions
 
-The device simulator scripts require a subset of IoT permissions:
-
-`device/create.sh` needs:
-
-- `iot:DescribeEndpoint`
-- `iot:CreateThing`
-- `iot:CreateKeysAndCertificate`
-- `iot:AttachThingPrincipal`
-- `iot:AttachPolicy`
-
-`device/delete.sh` needs:
-
-- `iot:DetachPolicy`
-- `iot:DetachThingPrincipal`
-- `iot:UpdateCertificate`
-- `iot:DeleteCertificate`
-- `iot:DeleteThing`
-
-Both scripts source `configure.sh` for the AWS region and profile.
+The `policy-simulated-device.json` policy covers both `device/create.sh` and `device/delete.sh`. This policy is only needed if you plan to use the simulated device — it is not required for deploying or operating the main application. See [Device Simulator](device-simulator.md) for usage.
 
 ## Docker Deployment (Recommended)
 
@@ -148,6 +131,15 @@ x509: certificate signed by unknown authority
 ```
 
 This happens because the container does not trust your corporate root certificate authority. See [Terraform Certificate Error (Corporate Proxy / VPN)](troubleshooting.md#terraform-certificate-error-corporate-proxy--vpn) in the troubleshooting guide.
+
+### Teardown
+
+```bash
+docker compose run --rm deployer destroy
+```
+
+This runs `terraform destroy` to remove all AWS resources. The Terraform state bucket and lock table are not deleted automatically.
+
 
 ## Native Deployment (Without Docker)
 

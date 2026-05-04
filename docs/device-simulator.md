@@ -6,7 +6,7 @@ The device simulator is a Node.js application that acts as a simulated Sidewalk 
 
 - **Cloud infrastructure must be deployed first** — the `CloudLightSoftDevice` IoT policy and IoT topic rules are created by Terraform. Run `./run.sh deploy` (or at least `./run.sh tf`) before creating simulated devices
 - **Node.js** installed on the machine where you run the simulator
-- **AWS CLI** configured with IoT permissions (see [Deployment Guide — Simulated device permissions](deployment.md#simulated-device-permissions))
+- **AWS CLI** configured with IoT permissions — attach `[policy-simulated-device.json](policy-simulated-device.json)` to your IAM user/role (see [AWS Permissions](deployment.md#aws-permissions) for more info)
 - Install dependencies:
   ```bash
   cd device
@@ -23,6 +23,7 @@ cd device
 ```
 
 This script:
+
 1. Creates `certs/my-device/device.js` from `device.sample.js` with the thing name and IoT endpoint filled in
 2. Creates an IoT thing named `my-device`
 3. Creates and activates a certificate with public/private keys
@@ -48,12 +49,14 @@ The simulator presents a terminal UI (TUI) with:
 
 ### Keyboard Controls
 
-| Key | Action | Available when |
-|-----|--------|---------------|
-| F2 | Connect / Disconnect | Always |
-| F4 | Send ping | Connected (ready) |
-| F10 | Quit | Always |
+
+| Key               | Action                                                    | Available when    |
+| ----------------- | --------------------------------------------------------- | ----------------- |
+| F2                | Connect / Disconnect                                      | Always            |
+| F4                | Send ping                                                 | Connected (ready) |
+| F10               | Quit                                                      | Always            |
 | Number keys (0-9) | Send random value for the corresponding sensor capability | Connected (ready) |
+
 
 The number keys correspond to the index in the sorted capability list shown in the status panel. Only sensor-mode capabilities (excluding the built-in ping) are triggerable.
 
@@ -70,13 +73,15 @@ The number keys correspond to the index in the sorted capability list shown in t
 
 The simulator comes with these capabilities defined in `device.sample.js`:
 
-| Key | Mode | Type | Display | Name |
-|-----|------|------|---------|------|
-| `b0` | sensor | boolean | value | Button |
-| `led0` | actuator | boolean | value | LED |
-| `temp` | sensor | integer | chart | Temperature |
-| `disp` | actuator | text | value | Display |
-| `msg` | actuator | text | value | Message |
+
+| Key    | Mode     | Type    | Display | Name        |
+| ------ | -------- | ------- | ------- | ----------- |
+| `b0`   | sensor   | boolean | value   | Button      |
+| `led0` | actuator | boolean | value   | LED         |
+| `temp` | sensor   | integer | chart   | Temperature |
+| `disp` | actuator | text    | value   | Display     |
+| `msg`  | actuator | text    | value   | Message     |
+
 
 A `ping` sensor capability is added automatically by the simulator for latency measurement display.
 
@@ -91,11 +96,14 @@ This removes the IoT thing, deactivates and deletes the certificate, detaches th
 
 ## Differences from a Real Sidewalk Device
 
-| Aspect | Sidewalk Device | Simulated Device |
-|--------|----------------|------------------|
-| Transport | Sidewalk radio (BLE/FSK/CSS) | MQTT over WebSocket |
-| Topic | `CloudLight/received` (via IoT Wireless destination) | `CloudLight/simulated/{clientId}/received` |
-| Payload | Binary → base64 → hex → ASCII | Plain text JSON `{"data": "..."}` |
-| Downlink | `SendDataToWirelessDevice` with sequence number | MQTT publish to downlink topic |
-| Provisioning | Sidewalk device registration (see embedded sample app) | `create.sh` script (IoT thing + certs) |
-| Message size limit | 255 bytes (BLE/FSK), 19 bytes (CSS) | No practical limit |
+
+| Aspect             | Sidewalk Device                                        | Simulated Device                           |
+| ------------------ | ------------------------------------------------------ | ------------------------------------------ |
+| Transport          | Sidewalk radio (BLE/FSK/CSS)                           | MQTT over WebSocket                        |
+| Topic              | `CloudLight/received` (via IoT Wireless destination)   | `CloudLight/simulated/{clientId}/received` |
+| Payload            | Binary → base64 → hex → ASCII                          | Plain text JSON `{"data": "..."}`          |
+| Downlink           | `SendDataToWirelessDevice` with sequence number        | MQTT publish to downlink topic             |
+| Provisioning       | Sidewalk device registration (see embedded sample app) | `create.sh` script (IoT thing + certs)     |
+| Message size limit | 255 bytes (BLE/FSK), 19 bytes (CSS)                    | No practical limit                         |
+
+

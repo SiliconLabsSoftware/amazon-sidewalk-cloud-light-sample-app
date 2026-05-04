@@ -1,0 +1,201 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Lambda",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:CreateFunction",
+                "lambda:DeleteFunction",
+                "lambda:GetFunction",
+                "lambda:GetFunctionCodeSigningConfig",
+                "lambda:GetPolicy",
+                "lambda:ListVersionsByFunction",
+                "lambda:UpdateFunctionCode",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:AddPermission",
+                "lambda:RemovePermission",
+                "lambda:TagResource",
+                "lambda:ListTags"
+            ],
+            "Resource": "arn:aws:lambda:*:ACCOUNT_ID:function:CloudLight*"
+        },
+        {
+            "Sid": "ApiGatewayV2",
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:GET",
+                "apigateway:POST",
+                "apigateway:PUT",
+                "apigateway:PATCH",
+                "apigateway:DELETE"
+            ],
+            "Resource": "arn:aws:apigateway:*::/apis*"
+        },
+        {
+            "Sid": "CloudFront",
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:CreateDistribution",
+                "cloudfront:UpdateDistribution",
+                "cloudfront:DeleteDistribution",
+                "cloudfront:GetDistribution",
+                "cloudfront:TagResource",
+                "cloudfront:UntagResource",
+                "cloudfront:ListTagsForResource",
+                "cloudfront:CreateInvalidation",
+                "cloudfront:CreateOriginAccessControl",
+                "cloudfront:GetOriginAccessControl",
+                "cloudfront:UpdateOriginAccessControl",
+                "cloudfront:DeleteOriginAccessControl"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IoTCore",
+            "Effect": "Allow",
+            "Action": [
+                "iot:CreateTopicRule",
+                "iot:DeleteTopicRule",
+                "iot:GetTopicRule",
+                "iot:ReplaceTopicRule",
+                "iot:ListTopicRules",
+                "iot:ListTagsForResource",
+                "iot:TagResource",
+                "iot:DescribeEndpoint",
+                "iot:CreatePolicy",
+                "iot:DeletePolicy",
+                "iot:GetPolicy",
+                "iot:ListPolicyVersions",
+                "iot:DeletePolicyVersion"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IoTWirelessAndCloudControl",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateResource",
+                "cloudformation:DeleteResource",
+                "cloudformation:GetResource",
+                "cloudformation:UpdateResource",
+                "cloudformation:GetResourceRequestStatus",
+                "cloudformation:ListResources",
+                "iotwireless:CreateDestination",
+                "iotwireless:DeleteDestination",
+                "iotwireless:GetDestination",
+                "iotwireless:UpdateDestination",
+                "iotwireless:ListTagsForResource",
+                "iotwireless:TagResource"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3BucketManagement",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:ListBucket",
+                "s3:GetBucketPolicy",
+                "s3:PutBucketPolicy",
+                "s3:DeleteBucketPolicy",
+                "s3:GetBucketAcl",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketCORS",
+                "s3:GetBucketWebsite",
+                "s3:GetBucketLogging",
+                "s3:GetBucketTagging",
+                "s3:GetBucketRequestPayment",
+                "s3:GetAccelerateConfiguration",
+                "s3:GetLifecycleConfiguration",
+                "s3:GetReplicationConfiguration",
+                "s3:GetEncryptionConfiguration",
+                "s3:GetBucketOwnershipControls",
+                "s3:PutBucketOwnershipControls",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:PutBucketPublicAccessBlock",
+                "s3:GetBucketPublicAccessBlock",
+                "s3:ListBucketVersions"
+            ],
+            "Resource": "arn:aws:s3:::cloud-light-frontend-*"
+        },
+        {
+            "Sid": "S3ObjectOperations",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:DeleteObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::cloud-light-frontend-*/*"
+        },
+        {
+            "Sid": "DynamoDB",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:CreateTable",
+                "dynamodb:DeleteTable",
+                "dynamodb:DescribeTable",
+                "dynamodb:DescribeTimeToLive",
+                "dynamodb:UpdateTimeToLive",
+                "dynamodb:DescribeContinuousBackups",
+                "dynamodb:ListTagsOfResource",
+                "dynamodb:TagResource"
+            ],
+            "Resource": "arn:aws:dynamodb:*:ACCOUNT_ID:table/CloudLight"
+        },
+        {
+            "Sid": "CloudWatchLogs",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:DeleteLogGroup",
+                "logs:PutRetentionPolicy",
+                "logs:DeleteRetentionPolicy",
+                "logs:ListTagsForResource",
+                "logs:TagResource"
+            ],
+            "Resource": "arn:aws:logs:*:ACCOUNT_ID:log-group:/aws/lambda/CloudLight*"
+        },
+        {
+            "Sid": "CloudWatchLogsDescribe",
+            "Effect": "Allow",
+            "Action": "logs:DescribeLogGroups",
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAM",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:GetRole",
+                "iam:TagRole",
+                "iam:UntagRole",
+                "iam:ListInstanceProfilesForRole",
+                "iam:ListAttachedRolePolicies",
+                "iam:ListRolePolicies",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PassRole",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:GetRolePolicy",
+                "iam:CreatePolicy",
+                "iam:DeletePolicy",
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:ListPolicyVersions",
+                "iam:CreatePolicyVersion",
+                "iam:DeletePolicyVersion",
+                "iam:TagPolicy"
+            ],
+            "Resource": [
+                "arn:aws:iam::ACCOUNT_ID:role/CloudLight*",
+                "arn:aws:iam::ACCOUNT_ID:policy/CloudLight*"
+            ]
+        }
+    ]
+}

@@ -4,9 +4,13 @@ A sample cloud backend and web frontend for Amazon Sidewalk devices. This applic
 
 The device firmware for this application is found in the companion **Cloud Light Embedded Sample Application**.
 
+## Deployment Costs
+
+This project uses AWS infrastructure. Most components are billed based on usage and free tier offerings apply. Depending on your usage profile and free tier credits availability, **you may be billed for the use of AWS resources**. See [AWS Services Used](docs/architecture.md#aws-services-used) for a list of cloud resources used.
+
 ## Quick Start
 
-**Prerequisites:** AWS account in a [Sidewalk-enabled region](https://docs.sidewalk.amazon/getting-started/), Docker installed, and configured AWS credentials (`~/.aws/credentials`) with [sufficient permissions](docs/deployment.md#aws-permissions).
+**Prerequisites:** AWS account in a [Sidewalk-enabled region](https://docs.sidewalk.amazon/getting-started/), Docker installed, and configured AWS credentials (`~/.aws/credentials`) with [sufficient permissions](docs/deployment.md#aws-permissions) (least-privilege IAM policies are provided in `docs/`).
 
 1. Clone this repository.
 2. Copy the configuration file template and edit it:
@@ -36,7 +40,7 @@ For a detailed guide, native deployment without Docker, CI/CD setup, and other o
 | `frontend/`                 | Web frontend (Vue 3 + Vite + Tailwind). Builds to static files deployed to S3/CloudFront                                |
 | `lambda/`                   | AWS Lambda functions (TypeScript). Three handlers: uplink processing, HTTP API, WebSocket API                           |
 | `terraform/`                | Infrastructure as code. All AWS resources defined here (DynamoDB, Lambda, API Gateway, IoT rules, S3, CloudFront, IAM)  |
-| `docs/`                     | This documentation                                                                                                      |
+| `docs/`                     | Documentation and IAM policy files for [AWS permissions](docs/deployment.md#aws-permissions)                            |
 | `run.sh`                    | Deployment orchestration script — the main entry point for building and deploying                                       |
 | `Dockerfile`                | Docker image with Node.js, Terraform, and AWS CLI pre-installed                                                         |
 | `docker-compose.yml`        | Docker Compose config for running deployments in a container                                                            |
