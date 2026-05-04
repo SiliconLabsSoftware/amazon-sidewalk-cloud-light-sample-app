@@ -40,7 +40,7 @@ Required environment variables: `AWS_REGION`, `TERRAFORM_BACKEND_BUCKET`, `FRONT
 
 ## AWS Permissions
 
-The IAM user or role running deployments needs permissions across multiple AWS services. For a quick start, `AdministratorAccess` works. For least-privilege, three IAM policy documents are provided in the `docs/` folder. Create these as IAM policies and attach them to your deployer user or role.
+The IAM user or role running deployments needs permissions across multiple AWS services. For a quick start, `AdministratorAccess` works. For least-privilege, three IAM policy documents are provided in the `docs/` folder. Create these as IAM policies and attach them to your deployer user or role. (See [this](https://docs.aws.amazon.com/IAM/latest/UserGuide/tutorial_managed-policies.html) AWS documentation for how to create policies.)
 
 **In every policy file, replace `ACCOUNT_ID` with your 12-digit AWS account ID** (e.g. `123456789012`). You can find your account ID in the AWS console or by running `aws sts get-caller-identity`.
 
@@ -51,10 +51,6 @@ The IAM user or role running deployments needs permissions across multiple AWS s
 | [`policy-simulated-device.json`](policy-simulated-device.json) | IoT thing and certificate management for the device simulator | Only when using the [device simulator](device-simulator.md) |
 
 The deployer also needs `sts:GetCallerIdentity` (allowed by default for all IAM identities) — the deploy script uses it to resolve the AWS account ID.
-
-### Policy scope
-
-The policies are scoped to resources prefixed with `CloudLight` or `cloud-light` where possible. Services that don't support resource-level conditions (API Gateway, IoT Core topic rules, CloudFront) use `*` resources.
 
 ### Simulated device permissions
 
