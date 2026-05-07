@@ -64,3 +64,13 @@ For a detailed guide, native deployment without Docker, CI/CD setup, and other o
 | [Troubleshooting](docs/troubleshooting.md)       | Common issues and solutions                                                          |
 
 
+## License
+See the [LICENSE.md](./LICENSE.md) file for details.
+
+## Contributions
+
+This sample application project is not accepting contributions at this time.
+
+## Disclaimer
+
+This example sample application is considered to be EXPERIMENTAL QUALITY which implies that the code provided in the repository has not been formally tested and is provided as-is. It is not suitable for production environments. See [Limitations](docs/limitations.md) for details.
