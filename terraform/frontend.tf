@@ -1,7 +1,21 @@
-# resource "random_id" "frontend" {
-#   byte_length = 6
-# }
-
+###############################################################################
+# @file
+# @brief Frontend S3 bucket, CloudFront distribution, and policies.
+###############################################################################
+# # License
+# Copyright 2026 Silicon Laboratories Inc. www.silabs.com
+###############################################################################
+#
+# SPDX-License-Identifier: LicenseRef-MSLA
+#
+# The licensor of this software is Silicon Laboratories Inc. Your use of this
+# software is governed by the terms of the Silicon Labs Master Software License
+# Agreement (MSLA) available at
+# www.silabs.com/about-us/legal/master-software-license-agreement
+# By installing, copying or otherwise using this software, you agree to the
+# terms of the MSLA.
+#
+###############################################################################
 resource "random_uuid" "frontend" {
 }
 

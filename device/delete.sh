@@ -1,5 +1,24 @@
 #!/bin/bash
 
+###############################################################################
+# @file
+# @brief Deletes an AWS IoT thing, revokes its certificate, and removes local device files.
+###############################################################################
+# # License
+# Copyright 2026 Silicon Laboratories Inc. www.silabs.com
+###############################################################################
+#
+# SPDX-License-Identifier: LicenseRef-MSLA
+#
+# The licensor of this software is Silicon Laboratories Inc. Your use of this
+# software is governed by the terms of the Silicon Labs Master Software License
+# Agreement (MSLA) available at
+# www.silabs.com/about-us/legal/master-software-license-agreement
+# By installing, copying or otherwise using this software, you agree to the
+# terms of the MSLA.
+#
+###############################################################################
+
 if [[ -z "$1" ]]; then
   echo "Provide thing name as argument" 1>&2
   echo "$0 <thing-name>"
