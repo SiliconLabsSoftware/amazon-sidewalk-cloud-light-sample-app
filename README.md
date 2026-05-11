@@ -73,4 +73,4 @@ This sample application project is not accepting contributions at this time.
 
 ## Disclaimer
 
-This example sample application is considered to be EXPERIMENTAL QUALITY which implies that the code provided in the repository has not been formally tested and is provided as-is. It is not suitable for production environments. See [Limitations](docs/limitations.md) for details.
+This example sample application is considered to be EXPERIMENTAL QUALITY which implies that the code provided in the repository has not been formally tested and is provided as-is. It is not suitable for production environments. See [Limitations](docs/limitations.md) for details. In addition, this code will not be maintained and there may be no bug maintenance planned for these resources. Silicon Labs may update projects from time to time.
