@@ -27,7 +27,9 @@ This project uses AWS infrastructure. Most components are billed based on usage 
    docker compose run --rm deployer
   ```
    This initializes the Terraform backend, deploys all AWS infrastructure, builds and uploads the frontend, and prints the application URL.
-5. Open the printed URL and log in with your `FRONTEND_PASSWORD` (auto-generated if left empty — check `configure.sh` after first deploy).
+
+5. At this point, you can set up your embedded device and run it. It will register and be available from the deployed frontend.
+6. Open the application URL and log in with your `FRONTEND_PASSWORD` (auto-generated if left empty — check `configure.sh` after first deploy). Alternatively you can read the QR code from the device's display, which links to the device's dashboard web page directly.
 
 For a detailed guide, native deployment without Docker, CI/CD setup, and other options, see the [Deployment Guide](docs/deployment.md).
 
