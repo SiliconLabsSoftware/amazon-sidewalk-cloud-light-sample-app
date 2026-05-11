@@ -26,13 +26,6 @@
 CONFIG_FILE="./configure.sh"
 CONFIG_FILE_SAMPLE="./configure.sh-sample"
 
-# These are mandatory to be provided either via ENV or in the config file:
-required_vars=(
-    "AWS_REGION"
-    "TERRAFORM_BACKEND_BUCKET"
-    "FRONTEND_PASSWORD"
-)
-
 if [[ "$#" -eq 0 ]]; then
     echo "Deployment orchestration script for Sidewalk Cloud Light"
     echo ""
@@ -77,9 +70,8 @@ if [[ -f "certificate-fix.sh" ]]; then
     ./certificate-fix.sh
 fi
 
-# A config file's presence is required even when values are set via ENV
-# because some values have to be saved back if they have to be generated
-# e.g. terraform bucket name or frontend password (if not provided)
+# Ensure configure.sh exists — needed as a write-back target for
+# auto-generated values (bucket name, password) in config-file mode
 if [[ ! -f "$CONFIG_FILE" ]]; then
     if [[ ! -f "$CONFIG_FILE_SAMPLE" ]]; then
         echo "Error: No configure.sh, nor configure.sh-sample file found. Aborting!" >&2
@@ -127,44 +119,28 @@ update_env_var() {
     export "${var_name}=${var_value}"
 }
 
-# Function to check which required variables are missing
-# Returns an array of missing variable names via global missing_vars array
-# and an array of found variable names via global found_vars array
-check_required_vars() {
-    missing_vars=()
-    found_vars=()
-    for var in "${required_vars[@]}"; do
+# Detect configuration source: environment variables vs config file.
+# If AWS_REGION is already in the environment, assume all config is provided
+# via env (e.g. CI/CD) and require all three variables — auto-generation
+# cannot persist values back in that context.
+# Otherwise, load from configure.sh where only AWS_REGION is required
+# and the rest can be auto-generated and saved back to the file.
+if [[ -n "${AWS_REGION:-}" ]]; then
+    echo "==> Configuration: using environment variables"
+    for var in AWS_REGION TERRAFORM_BACKEND_BUCKET FRONTEND_PASSWORD; do
         if [[ -z "${!var:-}" ]]; then
-            missing_vars+=("$var")
-        else
-            found_vars+=("$var")
+            echo "Error: $var must be set when providing configuration via environment variables." >&2
+            echo "In environment mode all three are required because generated values cannot be persisted." >&2
+            exit 1
         fi
     done
-}
-
-# Check which required variables are missing
-check_required_vars
-# Determine configuration state
-num_missing=${#missing_vars[@]}
-num_required=${#required_vars[@]}
-if [[ $num_missing -eq $num_required ]]; then
-    # All variables are missing - try to load from config file
-    echo "Loading required variables from $CONFIG_FILE ..."
-    source $CONFIG_FILE
-    # Re-check after loading config file
-    check_required_vars
-    if [[ ${#missing_vars[@]} -gt 0 ]]; then
-        echo "Error: Missing required environment variables after loading config: ${missing_vars[*]}"
+else
+    echo "==> Configuration: loading from $CONFIG_FILE"
+    source "$CONFIG_FILE"
+    if [[ -z "${AWS_REGION:-}" ]]; then
+        echo "Error: AWS_REGION is not set in $CONFIG_FILE." >&2
         exit 1
     fi
-elif [[ $num_missing -gt 0 ]]; then
-    # Some variables are provided but not all - invalid configuration
-    echo "Error: Inconsistent configuration - only some variables provided." >&2
-    echo "Found in environment: ${found_vars[*]}" >&2
-    echo "Missing: ${missing_vars[*]}" >&2
-    echo "Either provide all required variables via environment variables or none (will load from $CONFIG_FILE)" >&2
-    echo "You can run 'source $CONFIG_FILE' in shell to load all variables into the environment" >&2
-    exit 1
 fi
 
 # Find AWS Account ID based on credentials (and thereby validate credentials)
@@ -182,7 +158,7 @@ fi
 echo "Using AWS Account ID: $AWS_ACCOUNT_ID"
 
 # check if frontend password is "null" (i.e. not provided)
-if [[ "$FRONTEND_PASSWORD" == "null" ]]; then
+if [[ -z "${FRONTEND_PASSWORD:-}" || "$FRONTEND_PASSWORD" == "null" ]]; then
     echo "Frontend password not provided - generating a password..."
     PASSWORD=$(printf "%04d\n" $((RANDOM % 10000)))
     update_env_var "FRONTEND_PASSWORD" "$PASSWORD"
@@ -212,7 +188,7 @@ fi
 if [[ " ${args[@]} " =~ " init " ]]; then
     echo "==> Initializing Terraform backend"
     # check if bucket name is "null" (i.e. not provided)
-    if [[ "$TERRAFORM_BACKEND_BUCKET" == "null" ]]; then
+    if [[ -z "${TERRAFORM_BACKEND_BUCKET:-}" || "$TERRAFORM_BACKEND_BUCKET" == "null" ]]; then
         echo "Terraform remote state S3 bucket name not provided - generating a name..."
         BUCKET="cloud-light-terraform-backend-$(uuidgen | tr -d - | tr '[:upper:]' '[:lower:]')"
         update_env_var "TERRAFORM_BACKEND_BUCKET" "$BUCKET"

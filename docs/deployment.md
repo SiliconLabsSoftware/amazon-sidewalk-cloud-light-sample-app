@@ -28,15 +28,17 @@ export FRONTEND_PASSWORD=""         # optional — auto-generated if empty, max 
 
 `AWS_PROFILE` — The named profile from `~/.aws/credentials`. Comment this out if you provide credentials via environment variables instead.
 
-`TERRAFORM_BACKEND_BUCKET` — S3 bucket for Terraform remote state. Leave empty for auto-generation on first deploy. The bucket name is saved back to `configure.sh`.
+`TERRAFORM_BACKEND_BUCKET` — S3 bucket for Terraform remote state. Leave empty for auto-generation on first deploy. The generated name is saved back to `configure.sh`.
 
 `FRONTEND_PASSWORD` — The shared password used to authenticate the web frontend. Leave empty for auto-generation (4-digit numeric). Maximum 20 characters — this limit exists because the password is embedded in a device downlink URL message that must fit within Sidewalk transport constraints. The generated password is saved back to `configure.sh`.
 
 ### Environment variable alternative
 
-Instead of `configure.sh`, you can provide all required variables via the environment. This is the approach used in CI/CD pipelines. The variables must be **all** from the environment or **all** from `configure.sh` — partial mixing is rejected.
+Instead of `configure.sh`, you can provide configuration via environment variables. This is the approach used in CI/CD pipelines. The deploy script auto-detects the mode: if `AWS_REGION` is already set in the environment, it uses **environment mode**; otherwise it loads from `configure.sh` (**config-file mode**).
 
-Required environment variables: `AWS_REGION`, `TERRAFORM_BACKEND_BUCKET`, `FRONTEND_PASSWORD`. AWS credentials come separately via `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` (+ optional `AWS_SESSION_TOKEN`) or via `AWS_PROFILE` with a mounted credentials file.
+In environment mode, these variables are required: `AWS_REGION`, `TERRAFORM_BACKEND_BUCKET`, `FRONTEND_PASSWORD`. Auto-generation is not available because generated values cannot be persisted back to the environment (e.g. on a CI runner).
+
+AWS credentials are separate and can be provided via `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` (+ optional `AWS_SESSION_TOKEN`) or via `AWS_PROFILE` with a mounted credentials file.
 
 ## AWS Permissions
 
@@ -136,7 +138,6 @@ docker compose run --rm deployer destroy
 
 This runs `terraform destroy` to remove all AWS resources. The Terraform state bucket and lock table are not deleted automatically.
 
-
 ## Native Deployment (Without Docker)
 
 Use this if you prefer to run directly on your host or need faster iteration during development.
@@ -197,7 +198,7 @@ The project includes a GitHub Actions workflow (`.github/workflows/dev-deploy.ym
 
 ### Key CI patterns
 
-**All config via environment:** In CI, there is no `configure.sh`. All required variables are passed as `-e` flags to `docker run`:
+**All config via environment:** In CI, setting `AWS_REGION` in the environment activates environment mode, which requires all configuration variables. They are passed as `-e` flags to `docker run`:
 
 ```bash
 docker run \
