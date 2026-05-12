@@ -60,8 +60,8 @@ function render() {
   const nums = props.values.map((v) => parseFloat(v)).filter((n) => !isNaN(n));
   if (nums.length === 0) return;
 
-  const dataMin = Math.min(...nums);
-  const dataMax = Math.max(...nums);
+  const dataMin = nums.reduce((a, b) => (b < a ? b : a), nums[0]!);
+  const dataMax = nums.reduce((a, b) => (b > a ? b : a), nums[0]!);
   const { lo, hi, step } = niceRange(dataMin, dataMax);
   const yRange = hi - lo;
 
@@ -127,7 +127,7 @@ function render() {
 }
 
 onMounted(render);
-watch(() => props.values.length, render);
+watch(() => props.values, render, { deep: true });
 </script>
 
 <template>
