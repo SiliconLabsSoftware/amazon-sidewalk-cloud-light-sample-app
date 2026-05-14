@@ -15,7 +15,7 @@
   terms of the MSLA.
 -->
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import StateInteger from "./StateInteger.vue";
 import StateFloat from "./StateFloat.vue";
 import StateText from "./StateText.vue";
@@ -37,6 +37,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const dirtyValue = ref(props.state);
 const isDirty = ref(false);
+const lastSent = ref<string | null>(null);
 const value = computed({
   get() {
     return isDirty.value ? dirtyValue.value : props.state;
@@ -56,9 +57,19 @@ function dataStyle(styleValue: string) {
 }
 
 function doSet() {
+  lastSent.value = value.value;
   emit("set", value.value);
-  isDirty.value = false;
 }
+
+watch(
+  () => props.state,
+  (newState) => {
+    if (lastSent.value !== null && newState === lastSent.value) {
+      isDirty.value = false;
+      lastSent.value = null;
+    }
+  },
+);
 </script>
 
 <template>
