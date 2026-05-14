@@ -81,6 +81,44 @@ The `certificate-fix.sh` file is gitignored since it contains environment-specif
 
 Alternatively, you can skip Docker entirely and deploy natively from your host, which likely already has the necessary certificates.
 
+## Docker deployment: AWS credentials not found
+
+### Symptom
+
+`docker compose run --rm deployer` fails early with:
+
+```
+Error: Failed to retrieve AWS Account ID. Please check your AWS credentials.
+Example ways to provide AWS credentials:
+  - set environment variables AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY (+ optional AWS_SESSION_TOKEN), or
+  - set env or configure.sh variable AWS_PROFILE (with ~/.aws/credentials mounted into the container)
+```
+
+Your `configure.sh` may already set `AWS_PROFILE` correctly and `~/.aws/credentials` on the host may be fine.
+
+### Cause
+
+`docker-compose.yml` bind-mounts your credentials file using `$HOME`:
+
+```yaml
+volumes:
+  - $HOME/.aws/credentials:/root/.aws/credentials:ro
+```
+
+When Compose expands `$HOME`, it uses the environment of the user running the command. If you prefix the command with `**sudo**`, `$HOME` is often **root's home** (for example `/var/root` on macOS, `/root` on Linux), not your own user's home. Docker then mounts the wrong path. If that path has no file, Docker can create an empty directory at the mount point inside the container, so the AWS CLI sees no credentials even though `AWS_PROFILE` is set.
+
+### Fix
+
+1. **Prefer running without `sudo`.** On macOS with Docker Desktop, your user can run `docker compose` directly; that keeps `$HOME` pointing at your real home and the mount works.
+2. **If you must use `sudo`**, preserve your home (or credentials path) explicitly, for example:
+  ```bash
+   sudo -E docker compose run --rm deployer
+  ```
+   (Run that from a shell where `$HOME` is already your user’s home, before `sudo` changes the effective user.)
+3. **Last resort:** Edit `docker-compose.yml` and replace `$HOME/.aws/credentials` with the **absolute path** to your credentials file (for example `/Users/yourname/.aws/credentials`), then run Compose again.
+
+You can confirm the CLI works on the host with `aws sts get-caller-identity --profile <your-profile>`. Inside the container, the same command should succeed after the mount is correct.
+
 ## `run.sh version` Fails on macOS
 
 ### Symptom

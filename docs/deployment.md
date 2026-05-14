@@ -90,6 +90,8 @@ The container bind-mounts:
 - The project directory → `/cloud-light` (so your code and `configure.sh` are available)
 - `~/.aws/credentials` → `/root/.aws/credentials` (read-only)
 
+Do not run this under `sudo` unless you intend to: Compose resolves `$HOME` for the bind-mounted AWS credentials file; `sudo` often points that at root's home, so credentials disappear inside the container and deploy fails with "check your AWS credentials." Prefer no `sudo` (Docker Desktop), or preserve `$HOME` / use an absolute path. See [Docker deployment: AWS credentials not found](troubleshooting.md#docker-deployment-aws-credentials-not-found).
+
 At the end, the deploy prints the application URL.
 
 ### Run individual commands
