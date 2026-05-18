@@ -1,0 +1,63 @@
+# This workflows performs some advanced tests and SonarQube analysis on the Wing project.
+# It is triggered on every push to any branch, and on pull requests to the main branch.
+# It does NOT block the main build or the merge to 'main', however it SHOULD block the release.
+
+name: Sonarqube Scan
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch: {}
+
+concurrency:
+  group: sq-scan
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  SECRETS_CONFIG: |
+    [
+      {
+        "secret": "teams/data/wireless-tools/app/sonarqube_token",
+        "key": "token",
+        "variable": "WT_SONARQUBE_TOKEN"
+      }
+    ]
+
+jobs:
+  sq-scan:
+    runs-on: silabs-internal
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Vault secrets
+        uses: SiliconLabsInternal/wireless-tools-workflows/.github/actions/vault@main
+        with:
+          ca-cert: ${{ vars.SILABS_VAULT_PROD_CA }}
+          secret-config: "${{ env.SECRETS_CONFIG }}"
+
+      - name: Cache Sonar user cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: sonar-user-cache-${{ runner.os }}-${{ hashFiles('sonar-project.properties') }}
+          restore-keys: |
+            sonar-user-cache-${{ runner.os }}-
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5.2.0
+        with:
+          projectBaseDir: ${{ github.workspace }}
+          args: >
+            -Dsonar.scanner.skipJreProvisioning=true
+            -Dsonar.branch.name=${{ github.head_ref || github.ref_name }}
+            -Dproject.settings=${{ github.workspace }}/sonar-project.properties
+            -Dsonar.projectVersion=latest
+        env:
+          SONAR_TOKEN: ${{ env.WT_SONARQUBE_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
