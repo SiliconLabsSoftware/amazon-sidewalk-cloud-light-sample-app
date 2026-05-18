@@ -107,7 +107,7 @@ watch(
             <div class="basis-3/4 items-center justify-center">
               <StateInteger v-if="props.capability.type === 'i'" v-model="value" />
               <StateFloat v-if="props.capability.type === 'f'" v-model="value" />
-              <StateText v-if="props.capability.type === 't'" v-model="value" :max="32" />
+              <StateText v-if="props.capability.type === 't'" v-model="value" :max="10" />
             </div>
             <div class="basis-1/4">
               <button
