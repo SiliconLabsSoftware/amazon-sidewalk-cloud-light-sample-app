@@ -29,7 +29,7 @@
 ###############################################################################
 FROM node:24.11-slim
 
-ARG TF_VERSION=1.14.0
+ARG TF_VERSION=1.15.6
 ARG TARGETARCH 
 
 # install dependencies

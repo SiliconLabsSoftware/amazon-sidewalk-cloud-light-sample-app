@@ -208,27 +208,22 @@ if [[ " ${args[@]} " =~ " init " ]]; then
         echo "Using provided Terraform backend bucket name: $TERRAFORM_BACKEND_BUCKET"
         BUCKET=$TERRAFORM_BACKEND_BUCKET
     fi
-    TABLE="cloud-light-tfstatelock"
     BUCKET_KEY="terraform.tfstate"
     
     if ! aws s3api head-bucket --bucket "$BUCKET" 1>&2>/dev/null; then
         echo "Creating new terraform backend bucket: $BUCKET"
         aws s3api create-bucket \
             --bucket "$BUCKET"
-
-        # Create DynamoDB table for state locking (silent fail if already exists)
-        aws dynamodb create-table \
-            --table-name "$TABLE" \
-            --attribute-definitions AttributeName=LockID,AttributeType=S \
-            --key-schema AttributeName=LockID,KeyType=HASH \
-            --billing-mode PAY_PER_REQUEST \
-            >/dev/null 2>/dev/null || true
+        echo "Enabling versioning on terraform backend bucket: $BUCKET"
+        aws s3api put-bucket-versioning \
+            --bucket "$BUCKET" \
+            --versioning-configuration Status=Enabled
     fi
     
     pushd terraform >/dev/null
     terraform init \
         -backend-config="bucket=$BUCKET" \
-        -backend-config="dynamodb_table=$TABLE" \
+        -backend-config="use_lockfile=true" \
         -backend-config="region=$AWS_REGION" \
         -backend-config="key=$BUCKET_KEY" \
         -reconfigure
