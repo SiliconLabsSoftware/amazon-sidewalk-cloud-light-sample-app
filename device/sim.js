@@ -121,6 +121,7 @@ function handleMessage(verb, data) {
       break;
     case "!pong":
       capabilities.ping.value = Date.now() - Number(data);
+      send(`:ping=${capabilities.ping.value}`);
       break;
     case "!tink":
       send(`!tonk=${data}`);
