@@ -5,8 +5,9 @@
 name: Sonarqube Scan
 
 on:
-  push:
-    branches: [main, dev]
+  # TEMPORARILY DISABLED: re-enable the push trigger to resume automatic scans.
+  # push:
+  #   branches: [main, dev]
   workflow_dispatch: {}
 
 concurrency:

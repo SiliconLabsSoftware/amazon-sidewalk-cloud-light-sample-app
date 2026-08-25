@@ -1,8 +1,9 @@
 name: Dev deploy
 
 on:
-  push:
-    branches: [dev]
+  # TEMPORARILY DISABLED: re-enable the push trigger to resume automatic deploys.
+  # push:
+  #   branches: [dev]
   workflow_dispatch: {}
 
 concurrency:
