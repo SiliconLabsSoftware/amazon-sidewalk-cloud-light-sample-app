@@ -43,13 +43,14 @@ Represent connected devices (both Sidewalk and simulated).
 Each entry in the `capabilities` map has this shape:
 
 
-| Field     | Type   | Values                             | Description                      |
-| --------- | ------ | ---------------------------------- | -------------------------------- |
-| `key`     | String | `a-z0-9_`, up to 8 chars           | Unique identifier                |
-| `mode`    | String | `"s"` (sensor) or `"a"` (actuator) | Data direction                   |
-| `type`    | String | `"b"`, `"i"`, `"f"`, or `"t"`      | Boolean, integer, float, or text |
-| `display` | String | `"v"` (value) or `"c"` (chart)     | Frontend display hint            |
-| `name`    | String | Up to 16 chars                     | Human-readable label             |
+| Field       | Type   | Values                             | Description                                                                 |
+| ----------- | ------ | ---------------------------------- | --------------------------------------------------------------------------- |
+| `key`       | String | `a-z0-9_`, up to 8 chars           | Unique identifier                                                           |
+| `mode`      | String | `"s"` (sensor) or `"a"` (actuator) | Data direction                                                              |
+| `type`      | String | `"b"`, `"i"`, `"f"`, or `"t"`      | Boolean, integer, float, or text                                            |
+| `display`   | String | `"v"` (value) or `"c"` (chart)     | Frontend display hint                                                       |
+| `name`      | String | Up to 16 chars                     | Human-readable label                                                        |
+| `timeAdded` | Number | Epoch microseconds                 | Arrival order; stripped before API/WebSocket responses return capabilities |
 
 
 #### State map structure
@@ -74,9 +75,9 @@ The `state` map stores the current value for each capability key as a string. Fo
   "protocolVersion": "v1",
   "smsn": "50D141AA10EE03D533AF80F96F5ED5FA",
   "capabilities": {
-    "b0": { "key": "b0", "mode": "s", "type": "b", "display": "v", "name": "Button 0" },
-    "led0": { "key": "led0", "mode": "a", "type": "b", "display": "v", "name": "LED 0" },
-    "temp": { "key": "temp", "mode": "s", "type": "i", "display": "c", "name": "Temperature" }
+    "b0": { "key": "b0", "mode": "s", "type": "b", "display": "v", "name": "Button 0", "timeAdded": 1735689600000000 },
+    "led0": { "key": "led0", "mode": "a", "type": "b", "display": "v", "name": "LED 0", "timeAdded": 1735689600000001 },
+    "temp": { "key": "temp", "mode": "s", "type": "i", "display": "c", "name": "Temperature", "timeAdded": 1735689600000002 }
   },
   "state": {
     "b0": "0",

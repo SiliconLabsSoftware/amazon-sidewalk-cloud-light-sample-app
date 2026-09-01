@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief DynamoDB device CRUD, capability/state updates, and sequence counter.
+ * @brief DynamoDB device CRUD, capability/state updates (arrival-ordered), and sequence counter.
  *******************************************************************************
  * # License
  * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
@@ -29,7 +29,7 @@
  ******************************************************************************/
 import { GetCommand, PutCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import client from "./client.ts";
-import type { Capability, Device, DeviceRecord } from "./databaseTypes.ts";
+import type { Capability, Device, DeviceRecord, StoredCapability } from "./databaseTypes.ts";
 import { newExpiresTimestamp } from "./utils.ts";
 
 const DEVICES_PK = "devices";
@@ -38,9 +38,17 @@ const DEVICES_PK = "devices";
 // Helper Functions
 // ---------------------------------------------------------------------------
 
-function capabilitiesMapToArray(stored: DeviceRecord["capabilities"] | undefined): Capability[] {
+function toOrderedCapabilities(stored: DeviceRecord["capabilities"] | undefined): Capability[] {
   if (!stored) return [];
-  return Object.values(stored).sort((a, b) => a.name.localeCompare(b.name));
+  return Object.values(stored)
+    .sort((a, b) => a.timeAdded - b.timeAdded || a.key.localeCompare(b.key))
+    .map((cap) => ({
+      key: cap.key,
+      mode: cap.mode,
+      type: cap.type,
+      display: cap.display,
+      name: cap.name,
+    }));
 }
 
 function itemToDevice(item: Record<string, unknown>): Device {
@@ -49,7 +57,7 @@ function itemToDevice(item: Record<string, unknown>): Device {
     type: item.type as "sidewalk" | "mqtt",
     protocolVersion: item.protocolVersion as string,
     smsn: item.smsn as string | undefined,
-    capabilities: capabilitiesMapToArray(item.capabilities as DeviceRecord["capabilities"]),
+    capabilities: toOrderedCapabilities(item.capabilities as DeviceRecord["capabilities"]),
     state: item.state as Record<string, string>,
     seq: item.seq as number,
     expires: item.expires as number,
@@ -119,9 +127,10 @@ export const updateDeviceCapabilities = async (
 
   const names: Record<string, string> = {};
   const values: Record<string, unknown> = { ":exp": newExpiresTimestamp() };
+  const timeAdded = Date.now() * 1000;
   for (const [i, cap] of capabilities.entries()) {
     names[`#k${i}`] = cap.key;
-    values[`:v${i}`] = cap;
+    values[`:v${i}`] = { ...cap, timeAdded: timeAdded + i } satisfies StoredCapability;
   }
 
   const command = new UpdateCommand({

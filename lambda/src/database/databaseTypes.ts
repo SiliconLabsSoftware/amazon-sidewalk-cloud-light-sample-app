@@ -39,11 +39,16 @@ export interface Capability {
   name: string;
 }
 
+export interface StoredCapability extends Capability {
+  /** Epoch microseconds (Date.now() * 1000 + index in message); ordering only, not exposed via API. */
+  timeAdded: number;
+}
+
 export interface DeviceRecord extends DatabaseEntry {
   type: "sidewalk" | "mqtt";
   protocolVersion: string;
   smsn?: string;
-  capabilities: Record<string, Capability>;
+  capabilities: Record<string, StoredCapability>;
   state: Record<string, string>;
   seq: number;
 }
