@@ -9,8 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-crt": "^1.11.0",
-    "aws-iot-device-sdk": "^2.2.11",
+    "aws-iot-device-sdk": "^2.2.16",
     "blessed": "^0.1.81"
   }
 }

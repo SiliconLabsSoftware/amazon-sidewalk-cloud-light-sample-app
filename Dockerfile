@@ -27,7 +27,7 @@
 # 3. This notice may not be removed or altered from any source distribution.
 #
 ###############################################################################
-FROM node:24.11-slim
+FROM node:24.15-slim
 
 ARG TF_VERSION=1.15.6
 ARG TARGETARCH 

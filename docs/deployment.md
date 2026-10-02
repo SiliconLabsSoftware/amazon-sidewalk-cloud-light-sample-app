@@ -68,7 +68,7 @@ Docker is the primary deployment path. The Docker image bundles Node.js, Terrafo
 docker compose build
 ```
 
-This builds a `cloud-light` image based on `node:24-slim` with Terraform 1.14 and AWS CLI v2 installed.
+This builds a `cloud-light` image based on `node:24.15-slim` with Terraform 1.14 and AWS CLI v2 installed.
 
 ### Deploy
 
