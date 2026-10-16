@@ -18,18 +18,40 @@ Messages consist of a verb (typically a single character) followed by parameters
 
 ## Overview of messages
 
-| Direction | Verb / Type | Format                         | Description                |
-|-----------|-------------|--------------------------------|----------------------------|
-| up        | $           | `$<ver>+<app_id>#<smsn>`       | Pairing request            |
-| down      | url         | `url <magic_url>`              | Setup URL                  |
-| down      | ready       | `ready`                        | Setup complete signal      |
-| up        | \|          | `\|<cap>[\|<cap>...]`          | Capability advertisement   |
-| up        | :           | `:key=value[:key=value...]`    | Sensor state update        |
-| down      | :           | `:key=value[:key=value...]`    | Actuator command           |
-| up        | ping        | `!ping=<timestamp>`            | Latency ping               |
-| down      | pong        | `!pong=<timestamp>`            | Ping response              |
-| down      | tink        | `!tink=<timestamp>`            | Latency request from cloud |
-| up        | tonk        | `!tonk=<timestamp>`            | Response to tink           |
+
+| Direction | Verb / Type | Format                      | Description                |
+| --------- | ----------- | --------------------------- | -------------------------- |
+| up        | $           | `$<ver>+<app_id>#<smsn>`    | Pairing request            |
+| down      | url         | `url <magic_url>`           | Setup URL                  |
+| down      | ready       | `ready`                     | Setup complete signal      |
+| up        |             |                             | `                          |
+| up        | :           | `:key=value[:key=value...]` | Sensor state update        |
+| down      | :           | `:key=value[:key=value...]` | Actuator command           |
+| up        | ping        | `!ping=<timestamp>`         | Latency ping               |
+| down      | pong        | `!pong=<timestamp>`         | Ping response              |
+| down      | tink        | `!tink=<timestamp>`         | Latency request from cloud |
+| up        | tonk        | `!tonk=<timestamp>`         | Response to tink           |
+
+
+## Post-setup (post-pairing) message format
+
+All messages beginning with `:` or `!` follow this general format:
+
+```
+[:|!]<ID>[=<data>]
+```
+
+- `:` or `!` — message prefix, identifying the message family.
+- `<ID>` — a 1–4 character message identifier.
+- `=` — optional separator between the identifier and data.
+- `<data>` — optional payload of up to 13 characters.
+
+With the maximum-length ID and payload, including the optional `=`, a message
+is 19 characters and fits within the CSS sub-GHz physical payload limit. The
+state and latency messages below are examples of this syntax: for example,
+`:temp=23` and `!ping=<timestamp>`. Their identifiers and payloads must follow
+the same length limits.
+
 
 ## Message Flow
 
@@ -58,6 +80,8 @@ Example:
 - `protocol_version` — integer protocol version
 - `app_id` — application identifier string (i.e. `cloud_light`)
 - `smsn` — Sidewalk Manufacturing Serial Number. Simulated devices are not required to send it
+
+
 
 #### 1b. Cloud Response
 
@@ -92,36 +116,48 @@ Each capability has the format:
 
 Where:
 
-| Field | Description |
-|-------|-------------|
-| `key` | Unique identifier, `a-z0-9_`, up to 8 chars. Shorter is better. |
-| `cap` | Concatenation of mode, type, and optional display codes (see below). |
+
+| Field  | Description                                                                              |
+| ------ | ---------------------------------------------------------------------------------------- |
+| `key`  | Unique identifier, `a-z0-9_`, up to 8 chars. Shorter is better.                          |
+| `cap`  | Concatenation of mode, type, and optional display codes (see below).                     |
 | `name` | Human-readable label, up to 16 chars (`A-Za-z0-9` and space). If omitted, `key` is used. |
+
 
 `+` separates fields within a capability. `|` separates capabilities within a message.
 
 #### Mode
 
-| Code | Meaning |
-|------|---------|
-| `s` | **Sensor** — device sends data to cloud |
-| `a` | **Actuator** — device receives commands from cloud |
+
+| Code | Meaning                                            |
+| ---- | -------------------------------------------------- |
+| `s`  | **Sensor** — device sends data to cloud            |
+| `a`  | **Actuator** — device receives commands from cloud |
+
+
+
 
 #### Type
 
-| Code | Meaning |
-|------|---------|
-| `b` | Boolean |
-| `i` | Integer |
-| `f` | Float |
-| `t` | Text (printable ASCII, up to 128 chars) |
+
+| Code | Meaning                                 |
+| ---- | --------------------------------------- |
+| `b`  | Boolean                                 |
+| `i`  | Integer                                 |
+| `f`  | Float                                   |
+| `t`  | Text (printable ASCII, up to 128 chars) |
+
+
+
 
 #### Display (optional)
 
-| Code | Meaning |
-|------|---------|
-| `v` | Value (number or true/false indicator) |
-| `c` | Chart (real-time, auto-ranging) |
+
+| Code | Meaning                                |
+| ---- | -------------------------------------- |
+| `v`  | Value (number or true/false indicator) |
+| `c`  | Chart (real-time, auto-ranging)        |
+
 
 Defaults to `v` value if omitted.
 
@@ -139,10 +175,11 @@ Defaults to `v` value if omitted.
 - A status update for a key that has no registered capability is ignored.
 - A capability registered but never updated with status simply remains in its default state.
 
+
+
 #### Enabling link switch (on device)
 
 After setup and capability advertisement, the device enables link switching. It may from this point on switch between BLE, FSK, and CSS.
-
 
 ### 3. State Messages
 
@@ -162,6 +199,8 @@ Multiple state updates can be combined in a single message:
 < :key1=value1:key2=value2
 > :key1=value1:key2=value2
 ```
+
+
 
 #### Examples
 
@@ -191,6 +230,7 @@ Text to display:
 ```
 > :msg=hello
 ```
+
 
 
 ### 5. Ping / Pong and Tink / Tonk
